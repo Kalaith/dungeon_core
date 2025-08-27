@@ -1,0 +1,194 @@
+@import "tailwindcss";
+/* Add your custom styles below */
+
+body {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.game-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+}
+
+.game-header {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.resource-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.day-cycle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.75rem;
+}
+
+.status-indicator.closed {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.game-main {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .game-main {
+    flex-direction: row;
+  }
+}
+
+.sidebar {
+  width: 100%;
+  padding: 0.5rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    width: 12rem;
+    border-bottom: 0;
+    border-right: 1px solid #e5e7eb;
+  }
+}
+
+.sidebar-left {
+  order: 1;
+}
+
+.sidebar-right {
+  order: 3;
+}
+
+.dungeon-area {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem;
+  order: 2;
+}
+
+.game-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.game-log-container {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.game-log {
+  background: #f3f4f6;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  height: 8rem;
+  overflow-y: auto;
+  font-size: 0.75rem;
+}
+
+.room-selector, .monster-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.room-type, .monster-type {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  transition: background 0.2s;
+}
+
+.room-type.selected {
+  background: #bfdbfe;
+}
+
+.monster-type.selected {
+  background: #fecaca;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.4);
+  z-index: 50;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+  position: relative;
+  width: 91.666667%;
+  max-width: 28rem;
+}
+
+.close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn--primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: #1d4ed8;
+}
+
+.btn--secondary {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.btn--secondary:hover {
+  background: #d1d5db;
+}

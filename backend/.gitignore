@@ -1,0 +1,50 @@
+﻿### PHP ###
+# Composer vendor directory
+/vendor/
+
+# Composer PHAR
+composer.phar
+
+# Node modules (if any)
+/node_modules/
+
+# PHPUnit test results
+/test-results/
+
+# Build directories
+/build/
+
+# IDE files
+/.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Cache
+/cache/
+
+# Coverage reports
+/coverage/
+
+# Backup files
+*.bak
+*.tmp
+
+# Misc
+*.swp
+*.lock
+
+# Ignore all by default
+!.gitignore
+.env*
+vendor

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "dungeon-core": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "cwd": "h:\\WebHatchery\\game_apps\\dungeon_core",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

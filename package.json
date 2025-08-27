@@ -1,0 +1,27 @@
+{
+  "name": "dungeon-core-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Dungeon Core game database access",
+  "main": "mcp-server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node mcp-server.js",
+    "dev": "node --watch mcp-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "mysql2": "^3.11.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "dungeon-core",
+    "database",
+    "game"
+  ],
+  "author": "Dungeon Core Team",
+  "license": "MIT"
+}
