@@ -15,7 +15,7 @@ export const AdventurerChat: React.FC = () => {
         {adventurerMessages.length === 0 ? (
           <div className="text-xs text-gray-500 italic">No adventurer chatter yet...</div>
         ) : (
-          adventurerMessages.map((msg: { message: string; type: string; timestamp: number }, index: number) => (
+          adventurerMessages.map((msg, index: number) => (
             <div key={index} className="text-xs text-gray-300">
               {msg.message}
             </div>
