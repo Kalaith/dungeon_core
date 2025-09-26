@@ -21,14 +21,19 @@ class PlaceMonsterUseCase
             return ['success' => false, 'error' => 'Game not found'];
         }
 
-        // Check if adventurers are in dungeon
-        if ($game->hasActiveAdventurers()) {
-            return ['success' => false, 'error' => 'Cannot place monsters while adventurers are in the dungeon!'];
+        if (!$game->canModifyDungeon()) {
+            return [
+                'success' => false,
+                'error' => 'Dungeon must be closed and free of adventurers before placing monsters.',
+                'status' => $game->getStatus(),
+                'activeAdventurerParties' => $game->getActivePartyCount(),
+                'canModifyDungeon' => $game->canModifyDungeon()
+            ];
         }
 
         // Validate monster type exists and get stats
         $monsterStats = $this->gameLogic->getMonsterStats($monsterType);
-        if (!$monsterStats) {
+        if (empty($monsterStats)) {
             return ['success' => false, 'error' => 'Monster type not found!'];
         }
 
@@ -95,7 +100,8 @@ class PlaceMonsterUseCase
                 'scaledStats' => $scaledStats
             ],
             'costPaid' => $cost,
-            'remainingMana' => $game->getMana()
+            'remainingMana' => $game->getMana(),
+            'canModifyDungeon' => $game->canModifyDungeon()
         ];
     }
 }

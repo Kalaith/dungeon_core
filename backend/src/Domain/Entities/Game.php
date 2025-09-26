@@ -15,7 +15,9 @@ class Game
         private int $hour,
         private string $status = 'Open',
         private array $unlockedSpecies = [],
-        private array $speciesExperience = []
+        private array $speciesExperience = [],
+        private array $monsterExperience = [],
+        private int $activePartyCount = 0
     ) {}
 
     public function getId(): int { return $this->id; }
@@ -111,16 +113,49 @@ class Game
         $this->speciesExperience[$speciesName] += $experience;
     }
 
-    public function unlockTier(string $speciesName, int $tier): void
+    public function getMonsterExperience(string $monsterName): int
     {
-        // Implementation for tier unlocking if needed
-        // For now, this is a placeholder
+        return $this->monsterExperience[$monsterName] ?? 0;
+    }
+
+    public function addMonsterExperience(string $monsterName, int $experience): int
+    {
+        if (!isset($this->monsterExperience[$monsterName])) {
+            $this->monsterExperience[$monsterName] = 0;
+        }
+
+        $this->monsterExperience[$monsterName] += $experience;
+
+        return $this->monsterExperience[$monsterName];
+    }
+
+    public function getMonsterExperienceMap(): array
+    {
+        return $this->monsterExperience;
+    }
+
+    public function setMonsterExperience(array $experience): void
+    {
+        $this->monsterExperience = $experience;
+    }
+
+    public function setActivePartyCount(int $count): void
+    {
+        $this->activePartyCount = max(0, $count);
+    }
+
+    public function getActivePartyCount(): int
+    {
+        return $this->activePartyCount;
     }
 
     public function hasActiveAdventurers(): bool
     {
-        // For now, return false to allow monster placement
-        // This can be implemented later when adventurer system is added
-        return false;
+        return $this->activePartyCount > 0;
+    }
+
+    public function canModifyDungeon(): bool
+    {
+        return $this->status === 'Closed' && !$this->hasActiveAdventurers();
     }
 }

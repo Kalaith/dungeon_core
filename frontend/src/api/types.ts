@@ -11,6 +11,11 @@ export interface GameStateResponse {
     hour: number;
     status: string;
     unlockedMonsterSpecies: string[];
+    speciesExperience: Record<string, number>;
+    monsterExperience: Record<string, number>;
+    activeAdventurerParties: number;
+    canModifyDungeon: boolean;
+    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
   };
   floors?: Array<{
     id: number;
@@ -20,7 +25,14 @@ export interface GameStateResponse {
       type: 'entrance' | 'normal' | 'boss' | 'core';
       position: number;
       floorNumber: number;
-      monsters: any[];
+      monsters: Array<{
+        id: number;
+        type: string;
+        hp: number;
+        maxHp: number;
+        alive: boolean;
+        isBoss: boolean;
+      }>;
       roomUpgrade: null;
       explored: boolean;
       loot: number;
@@ -57,6 +69,7 @@ export interface DungeonStateResponse {
         hp: number;
         maxHp: number;
         alive: boolean;
+        isBoss: boolean;
       }>;
     }>;
   }>;
@@ -67,6 +80,7 @@ export interface DungeonStateResponse {
     maxHp: number;
     roomId: number;
     alive: boolean;
+    isBoss: boolean;
   }>;
 }
 
@@ -106,6 +120,8 @@ export interface UnlockMonsterSpeciesResponse {
   costPaid?: number;
   remainingGold?: number;
   required?: number;
+  unlockedSpecies?: string[];
+  speciesExperience?: Record<string, number>;
 }
 
 export interface GainMonsterExperienceRequest {
@@ -124,6 +140,8 @@ export interface GainMonsterExperienceResponse {
     species: string;
     tier: number;
   }>;
+  speciesExperience?: Record<string, number>;
+  monsterExperience?: Record<string, number>;
 }
 
 export interface GetAvailableMonstersResponse {
@@ -135,6 +153,23 @@ export interface GetAvailableMonstersResponse {
     attack: number;
     defense: number;
     tier: number;
+    species: string;
+    baseCost: number;
+    traits: string[];
+  }>;
+  species?: Record<string, {
+    experience: number;
+    unlockedTier: number;
+    monsters: Array<{
+      name: string;
+      hp: number;
+      attack: number;
+      defense: number;
+      tier: number;
+      species: string;
+      baseCost: number;
+      traits: string[];
+    }>;
   }>;
 }
 
@@ -151,6 +186,16 @@ export interface AddRoomResponse {
   roomId?: number;
   type?: string;
   position?: number;
+  status?: string;
+  activeAdventurerParties?: number;
+}
+
+export interface UpdateDungeonStatusResponse {
+  success: boolean;
+  error?: string;
+  status?: string;
+  activeAdventurerParties?: number;
+  canModifyDungeon?: boolean;
 }
 
 export interface InitializeGameResponse {
@@ -175,6 +220,10 @@ export interface InitializeGameResponse {
     deepCoreBonus: number;
     unlockedMonsterSpecies: string[];
     speciesExperience: Record<string, number>;
+    monsterExperience: Record<string, number>;
+    activeAdventurerParties: number;
+    canModifyDungeon: boolean;
+    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
     log: Array<{
       message: string;
       type: string;
@@ -189,7 +238,14 @@ export interface InitializeGameResponse {
       type: 'entrance' | 'normal' | 'boss' | 'core';
       position: number;
       floorNumber: number;
-      monsters: any[];
+      monsters: Array<{
+        id: number;
+        type: string;
+        hp: number;
+        maxHp: number;
+        alive: boolean;
+        isBoss: boolean;
+      }>;
       roomUpgrade: null;
       explored: boolean;
       loot: number;

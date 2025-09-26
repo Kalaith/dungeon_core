@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { initializeGame, getGameState, placeMonsterAPI, addRoomAPI, resetGameAPI } from '../api/gameApi';
+import { initializeGame, getGameState, placeMonsterAPI, addRoomAPI, resetGameAPI, updateDungeonStatus } from '../api/gameApi';
 import { useSpeciesStore } from './speciesStore';
 
 // Export the GameState type for use in components
@@ -12,6 +12,8 @@ export interface GameState {
   maxMana: number;
   souls: number;
   status: string;
+  canModifyDungeon: boolean;
+  activeAdventurerParties: number;
 }
 
 interface BackendGameState {
@@ -29,8 +31,9 @@ interface BackendGameState {
   refreshGameState: () => Promise<void>;
   resetGame: () => Promise<void>;
   selectMonster: (monster: string | null) => void;
-  placeMonster: (roomId: number, monsterType: string) => Promise<boolean>;
+  placeMonster: (floorNumber: number, roomPosition: number, monsterType: string) => Promise<boolean>;
   addRoom: (floorNumber: number, roomType: string, position: number) => Promise<boolean>;
+  updateStatus: (status: string) => Promise<boolean>;
 }
 
 export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
@@ -57,15 +60,18 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           maxMana: initialData.game.maxMana,
           souls: initialData.game.souls,
           status: initialData.game.status,
+          canModifyDungeon: initialData.game.canModifyDungeon,
+          activeAdventurerParties: initialData.game.activeAdventurerParties,
         },
-        loading: false 
+        loading: false
       });
-      
+
       // Update species store with initial data
       if (initialData.game.unlockedMonsterSpecies) {
         useSpeciesStore.getState().setSpeciesData(
           initialData.game.unlockedMonsterSpecies,
-          initialData.game.speciesExperience || {}
+          initialData.game.speciesExperience || {},
+          initialData.game.speciesProgress || {}
         );
       }
       
@@ -87,17 +93,19 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
       const currentGame = currentState.gameState;
       const newGame = newGameData.game;
       
-      const needsUpdate = !currentGame || 
+      const needsUpdate = !currentGame ||
         currentGame.mana !== newGame.mana ||
         currentGame.gold !== newGame.gold ||
         currentGame.souls !== newGame.souls ||
         currentGame.day !== newGame.day ||
         currentGame.hour !== newGame.hour ||
-        currentGame.status !== newGame.status;
-      
+        currentGame.status !== newGame.status ||
+        currentGame.canModifyDungeon !== newGame.canModifyDungeon ||
+        currentGame.activeAdventurerParties !== newGame.activeAdventurerParties;
+
       if (needsUpdate) {
         console.log('Game state changed, updating...');
-        set({ 
+        set({
           gameState: {
             day: newGame.day,
             gold: newGame.gold,
@@ -107,10 +115,20 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
             maxMana: newGame.maxMana,
             souls: newGame.souls,
             status: newGame.status,
+            canModifyDungeon: newGame.canModifyDungeon,
+            activeAdventurerParties: newGame.activeAdventurerParties,
           }
         });
       } else {
         console.log('Game state unchanged, skipping update');
+      }
+
+      if (newGame.unlockedMonsterSpecies) {
+        useSpeciesStore.getState().setSpeciesData(
+          newGame.unlockedMonsterSpecies,
+          newGame.speciesExperience || {},
+          newGame.speciesProgress || {}
+        );
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to refresh game state' });
@@ -119,29 +137,29 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
 
   selectMonster: (monster) => set({ selectedMonster: monster }),
 
-  placeMonster: async (roomId: number, monsterType: string) => {
+  placeMonster: async (floorNumber: number, roomPosition: number, monsterType: string) => {
     try {
-      // We no longer need to find room info since we pass roomId directly to backend
-      // Backend will handle the conversion from roomId to floor/position
-      const result = await placeMonsterAPI(1, roomId, monsterType); // Using roomId as position for now
-      
+      const result = await placeMonsterAPI(floorNumber, roomPosition, monsterType);
+
       if (result.success) {
         // Refresh minimal game state (mana, gold, etc.)
         await get().refreshGameState();
         return true;
       } else {
         set({ error: result.error || 'Failed to place monster' });
+        await get().refreshGameState();
         return false;
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to place monster' });
+      await get().refreshGameState();
       return false;
     }
   },
 
   addRoom: async (floorNumber: number, roomType: string, position: number) => {
     const cost = 20 + (position * 5); // Basic cost calculation
-    
+
     try {
       const result = await addRoomAPI(floorNumber, roomType, position, cost);
       if (result.success) {
@@ -149,11 +167,30 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
         await get().refreshGameState();
         return true;
       } else {
-        set({ error: result.error || 'Failed to add room' });
+        const errorMessage = result.error || 'Failed to add room';
+        set({ error: errorMessage });
+        await get().refreshGameState();
         return false;
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to add room' });
+      return false;
+    }
+  },
+
+  updateStatus: async (status: string) => {
+    try {
+      const result = await updateDungeonStatus(status);
+
+      if (result.success) {
+        await get().refreshGameState();
+        return true;
+      }
+
+      set({ error: result.error || 'Failed to update dungeon status' });
+      return false;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to update dungeon status' });
       return false;
     }
   },
@@ -163,10 +200,10 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
     try {
       console.log('Resetting game...');
       const result = await resetGameAPI();
-      
+
       if (result.success && result.gameData) {
         console.log('Game reset successful');
-        set({ 
+        set({
           gameState: {
             day: result.gameData.game.day,
             gold: result.gameData.game.gold,
@@ -176,11 +213,19 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
             maxMana: result.gameData.game.maxMana,
             souls: result.gameData.game.souls,
             status: result.gameData.game.status,
+            canModifyDungeon: result.gameData.game.canModifyDungeon,
+            activeAdventurerParties: result.gameData.game.activeAdventurerParties,
           },
           loading: false,
           error: null,
           selectedMonster: null
         });
+
+        useSpeciesStore.getState().setSpeciesData(
+          result.gameData.game.unlockedMonsterSpecies || [],
+          result.gameData.game.speciesExperience || {},
+          result.gameData.game.speciesProgress || {}
+        );
         console.log('Game reset complete');
       } else {
         set({ error: result.error || 'Failed to reset game', loading: false });

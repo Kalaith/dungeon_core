@@ -2,21 +2,25 @@
 
 namespace DungeonCore\Domain\Services;
 
+use DungeonCore\Domain\Repositories\DataRepositoryInterface;
+
 class GameLogic
 {
+    private ?array $monsterCatalog = null;
+    private ?array $gameConstants = null;
+
+    public function __construct(private DataRepositoryInterface $dataRepository)
+    {
+    }
+
     public function calculateMonsterCost(string $monsterType, int $floorNumber, bool $isBossRoom = false): int
     {
-        $baseCosts = [
-            'Goblin' => 10,
-            'Orc' => 20,
-            'Slime' => 8,
-            'False Chest' => 15
-        ];
-        
-        $baseCost = $baseCosts[$monsterType] ?? 10;
+        $monster = $this->getMonsterStats($monsterType);
+        $baseCost = $monster['baseCost'] ?? 10;
+
         $floorMultiplier = 1 + ($floorNumber - 1) * 0.5; // 50% increase per floor
         $bossMultiplier = $isBossRoom ? 2.0 : 1.0;
-        
+
         return (int) ceil($baseCost * $floorMultiplier * $bossMultiplier);
     }
 
@@ -42,26 +46,40 @@ class GameLogic
 
     public function getMonsterStats(string $monsterType): array
     {
-        $stats = [
-            'Goblin' => ['hp' => 25, 'attack' => 8, 'defense' => 3, 'tier' => 1, 'species' => 'Goblinoid'],
-            'Orc' => ['hp' => 40, 'attack' => 12, 'defense' => 6, 'tier' => 2, 'species' => 'Goblinoid'],
-            'Slime' => ['hp' => 20, 'attack' => 5, 'defense' => 2, 'tier' => 1, 'species' => 'Slime'],
-            'False Chest' => ['hp' => 30, 'attack' => 10, 'defense' => 4, 'tier' => 1, 'species' => 'Mimic']
+        $catalog = $this->getMonsterCatalog();
+
+        if (!isset($catalog[$monsterType])) {
+            return [];
+        }
+
+        $data = $catalog[$monsterType];
+
+        return [
+            'hp' => (int) ($data['hp'] ?? 20),
+            'attack' => (int) ($data['attack'] ?? 5),
+            'defense' => (int) ($data['defense'] ?? 2),
+            'tier' => (int) ($data['tier'] ?? 1),
+            'species' => $data['species'] ?? 'Unknown',
+            'baseCost' => (int) ($data['baseCost'] ?? 10),
+            'traits' => $data['traits'] ?? []
         ];
-        
-        return $stats[$monsterType] ?? ['hp' => 20, 'attack' => 5, 'defense' => 2, 'tier' => 1, 'species' => 'Unknown'];
     }
 
     public function getSpeciesUnlockCost(string $speciesName): ?int
     {
-        $unlockCosts = [
-            'Mimetic' => 1000,      // Default cost from constants
-            'Amorphous' => 1000,
-            'Plant' => 1000,
-            'Crustacean' => 1000,
-        ];
-        
-        return $unlockCosts[$speciesName] ?? 1000; // Default cost
+        $constants = $this->getGameConstants();
+
+        if (isset($constants['SPECIES_UNLOCK_COST'])) {
+            return (int) $constants['SPECIES_UNLOCK_COST'];
+        }
+
+        // Allow species-specific override if provided by constant table (e.g., SPECIES_COST_Mimetic)
+        $key = 'SPECIES_COST_' . strtoupper($speciesName);
+        if (isset($constants[$key])) {
+            return (int) $constants[$key];
+        }
+
+        return 1000;
     }
 
     public function calculateUnlockedTier(int $totalExperience): int
@@ -88,30 +106,25 @@ class GameLogic
 
     public function getMonstersForSpeciesAndTier(string $speciesName, int $maxTier): array
     {
-        $allMonsters = [
-            'Goblinoid' => [
-                1 => [['name' => 'Goblin', 'hp' => 25, 'attack' => 8, 'defense' => 3, 'tier' => 1]],
-                2 => [['name' => 'Orc', 'hp' => 40, 'attack' => 12, 'defense' => 6, 'tier' => 2]],
-                3 => [['name' => 'Orc Warrior', 'hp' => 60, 'attack' => 18, 'defense' => 9, 'tier' => 3]],
-            ],
-            'Slime' => [
-                1 => [['name' => 'Slime', 'hp' => 20, 'attack' => 5, 'defense' => 2, 'tier' => 1]],
-                2 => [['name' => 'Acid Slime', 'hp' => 35, 'attack' => 10, 'defense' => 4, 'tier' => 2]],
-            ],
-            'Mimic' => [
-                1 => [['name' => 'False Chest', 'hp' => 30, 'attack' => 10, 'defense' => 4, 'tier' => 1]],
-                2 => [['name' => 'Treasure Mimic', 'hp' => 50, 'attack' => 15, 'defense' => 8, 'tier' => 2]],
-            ]
-        ];
-
+        $catalog = $this->getMonsterCatalog();
         $availableMonsters = [];
-        if (isset($allMonsters[$speciesName])) {
-            for ($tier = 1; $tier <= $maxTier; $tier++) {
-                if (isset($allMonsters[$speciesName][$tier])) {
-                    $availableMonsters = array_merge($availableMonsters, $allMonsters[$speciesName][$tier]);
-                }
+
+        foreach ($catalog as $monsterName => $data) {
+            if (strcasecmp($data['species'] ?? '', $speciesName) === 0 && ($data['tier'] ?? 0) <= $maxTier) {
+                $availableMonsters[] = [
+                    'name' => $monsterName,
+                    'hp' => (int) ($data['hp'] ?? 20),
+                    'attack' => (int) ($data['attack'] ?? 5),
+                    'defense' => (int) ($data['defense'] ?? 2),
+                    'tier' => (int) ($data['tier'] ?? 1),
+                    'species' => $data['species'] ?? 'Unknown',
+                    'baseCost' => (int) ($data['baseCost'] ?? 10),
+                    'traits' => $data['traits'] ?? []
+                ];
             }
         }
+
+        usort($availableMonsters, fn($a, $b) => $a['tier'] <=> $b['tier']);
 
         return $availableMonsters;
     }
@@ -134,8 +147,15 @@ class GameLogic
         // For now, assume this check is done elsewhere
         
         $monsterStats = $this->getMonsterStats($monsterType);
+        if (empty($monsterStats)) {
+            return [
+                'valid' => false,
+                'error' => 'Unknown monster type.'
+            ];
+        }
+
         $roomCapacity = $this->calculateRoomCapacity($roomPosition, $monsterStats['tier']);
-        
+
         // Count existing monsters of the same tier
         $sameTierCount = 0;
         foreach ($existingMonsters as $monster) {
@@ -144,14 +164,32 @@ class GameLogic
                 $sameTierCount++;
             }
         }
-        
+
         if ($sameTierCount >= $roomCapacity) {
             return [
                 'valid' => false,
                 'error' => "Room {$roomPosition} can only hold {$roomCapacity} Tier {$monsterStats['tier']} monsters!"
             ];
         }
-        
+
         return ['valid' => true];
+    }
+
+    private function getMonsterCatalog(): array
+    {
+        if ($this->monsterCatalog === null) {
+            $this->monsterCatalog = $this->dataRepository->getMonsterTypes();
+        }
+
+        return $this->monsterCatalog;
+    }
+
+    private function getGameConstants(): array
+    {
+        if ($this->gameConstants === null) {
+            $this->gameConstants = $this->dataRepository->getGameConstants();
+        }
+
+        return $this->gameConstants;
     }
 }

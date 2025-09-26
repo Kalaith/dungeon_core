@@ -9,6 +9,7 @@ use DungeonCore\Application\UseCases\ResetGameUseCase;
 use DungeonCore\Application\UseCases\UnlockMonsterSpeciesUseCase;
 use DungeonCore\Application\UseCases\GainMonsterExperienceUseCase;
 use DungeonCore\Application\UseCases\GetAvailableMonstersUseCase;
+use DungeonCore\Application\UseCases\UpdateDungeonStatusUseCase;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -21,7 +22,8 @@ class GameController
         private ResetGameUseCase $resetGameUseCase,
         private UnlockMonsterSpeciesUseCase $unlockMonsterSpeciesUseCase,
         private GainMonsterExperienceUseCase $gainMonsterExperienceUseCase,
-        private GetAvailableMonstersUseCase $getAvailableMonstersUseCase
+        private GetAvailableMonstersUseCase $getAvailableMonstersUseCase,
+        private UpdateDungeonStatusUseCase $updateDungeonStatusUseCase
     ) {}
 
     public function initialize(Request $request, Response $response): Response
@@ -90,9 +92,23 @@ class GameController
     public function getAvailableMonsters(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
-        
+
         $result = $this->getAvailableMonstersUseCase->execute($sessionId);
-        
+
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function updateStatus(Request $request, Response $response): Response
+    {
+        $sessionId = $this->getSessionId($request);
+        $data = json_decode($request->getBody()->getContents(), true);
+
+        $result = $this->updateDungeonStatusUseCase->execute(
+            $sessionId,
+            $data['status'] ?? ''
+        );
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }

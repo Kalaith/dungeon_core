@@ -5,7 +5,7 @@ import { fetchGameConstantsData } from "../../api/gameApi";
 
 export const GameControls: React.FC = () => {
   const { speed, status, setSpeed, setStatus, advanceTime, respawnMonsters, adventurerParties } = useGameStore();
-  const { resetGame: resetBackendGame } = useBackendGameStore();
+  const { resetGame: resetBackendGame, updateStatus, gameState: backendGameState } = useBackendGameStore();
   const timeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-advance time
@@ -35,13 +35,19 @@ export const GameControls: React.FC = () => {
     const newSpeed = speed === 1 ? 2 : speed === 2 ? 4 : 1;
     setSpeed(newSpeed);
   };
-  const handleToggleDungeon = () => {
-    if (status === 'Open') {
-      setStatus('Closed'); // This will automatically handle the closing logic in game store
-    } else if (status === 'Closed' || status === 'Closing') {
-      setStatus('Open');
+  const handleToggleDungeon = async () => {
+    const currentStatus = backendGameState?.status || status;
+
+    if (currentStatus === 'Maintenance') {
+      return;
     }
-    // Can't toggle out of Maintenance - that's automatic
+
+    const targetStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
+    setStatus(targetStatus as typeof status);
+    const success = await updateStatus(targetStatus);
+    if (!success) {
+      setStatus(currentStatus as typeof status);
+    }
   };
   const handleForceRespawn = () => {
     if (adventurerParties.length === 0) {
@@ -65,6 +71,10 @@ export const GameControls: React.FC = () => {
     }
   };
 
+  const displayStatus = backendGameState?.status || status;
+
+  const activeBackendParties = backendGameState?.activeAdventurerParties ?? adventurerParties.length;
+
   return (
     <div className="game-controls flex flex-wrap gap-4 justify-center items-center">
       <button 
@@ -77,29 +87,29 @@ export const GameControls: React.FC = () => {
       </button>
         <button 
         className={`btn px-4 py-2 rounded text-white transition-colors ${
-          status === 'Open' 
-            ? 'bg-red-500 hover:bg-red-600' 
-            : status === 'Closed'
+          displayStatus === 'Open'
+            ? 'bg-red-500 hover:bg-red-600'
+            : displayStatus === 'Closed'
               ? 'bg-green-500 hover:bg-green-600'
-              : status === 'Closing'
+              : displayStatus === 'Closing'
                 ? 'bg-orange-500 hover:bg-orange-600'
                 : 'bg-gray-400 cursor-not-allowed'
         }`}
         onClick={handleToggleDungeon}
-        disabled={status === 'Maintenance'}
+        disabled={displayStatus === 'Maintenance'}
         title={
-          status === 'Maintenance' 
-            ? 'Cannot control during maintenance' 
-            : status === 'Closing'
+          displayStatus === 'Maintenance'
+            ? 'Cannot control during maintenance'
+            : displayStatus === 'Closing'
               ? 'Dungeon is closing - waiting for adventurers to finish'
               : 'Toggle dungeon open/closed'
         }
       >
-        {status === 'Open' 
-          ? 'Close Dungeon' 
-          : status === 'Closed' 
-            ? 'Open Dungeon' 
-            : status === 'Closing'
+        {displayStatus === 'Open'
+          ? 'Close Dungeon'
+          : displayStatus === 'Closed'
+            ? 'Open Dungeon'
+            : displayStatus === 'Closing'
               ? 'Closing...'
               : 'Maintenance'}
       </button><button
@@ -124,7 +134,7 @@ export const GameControls: React.FC = () => {
       </button>
 
       <div className="flex items-center gap-2 text-sm text-gray-300">
-        <span>Active Parties: {adventurerParties.length}</span>
+        <span>Active Parties: {activeBackendParties}</span>
       </div>
     </div>
   );
