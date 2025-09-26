@@ -28,6 +28,7 @@ use DungeonCore\Application\UseCases\ResetGameUseCase;
 use DungeonCore\Application\UseCases\UnlockMonsterSpeciesUseCase;
 use DungeonCore\Application\UseCases\GainMonsterExperienceUseCase;
 use DungeonCore\Application\UseCases\GetAvailableMonstersUseCase;
+use DungeonCore\Application\UseCases\UpdateDungeonStatusUseCase;
 use DungeonCore\Application\UseCases\GetGameConstantsUseCase;
 use DungeonCore\Application\UseCases\GetMonsterTypesUseCase;
 use DungeonCore\Application\UseCases\GetMonsterTraitsUseCase;
@@ -52,18 +53,19 @@ $equipmentRepo = new MySQLEquipmentRepository($pdo);
 $dataRepo = new MySQLDataRepository($pdo);
 
 // Services
-$gameLogic = new GameLogic();
+$gameLogic = new GameLogic($dataRepo);
 
 // Use Cases
-$getGameStateUseCase = new GetGameStateUseCase($gameRepo, $dungeonRepo);
+$getGameStateUseCase = new GetGameStateUseCase($gameRepo, $dungeonRepo, $gameLogic);
 $getDungeonStateUseCase = new GetDungeonStateUseCase($gameRepo, $dungeonRepo);
 $placeMonsterUseCase = new PlaceMonsterUseCase($gameRepo, $dungeonRepo, $gameLogic);
 $addRoomUseCase = new AddRoomUseCase($gameRepo, $dungeonRepo);
-$initializeGameUseCase = new InitializeGameUseCase($gameRepo, $dungeonRepo);
-$resetGameUseCase = new ResetGameUseCase($gameRepo, $dungeonRepo);
+$initializeGameUseCase = new InitializeGameUseCase($gameRepo, $dungeonRepo, $gameLogic);
+$resetGameUseCase = new ResetGameUseCase($gameRepo, $dungeonRepo, $gameLogic);
 $unlockMonsterSpeciesUseCase = new UnlockMonsterSpeciesUseCase($gameRepo, $gameLogic);
 $gainMonsterExperienceUseCase = new GainMonsterExperienceUseCase($gameRepo, $gameLogic);
 $getAvailableMonstersUseCase = new GetAvailableMonstersUseCase($gameRepo, $gameLogic);
+$updateDungeonStatusUseCase = new UpdateDungeonStatusUseCase($gameRepo);
 
 // Data Use Cases
 $getGameConstantsUseCase = new GetGameConstantsUseCase($dataRepo);
@@ -80,7 +82,8 @@ $gameController = new GameController(
     $resetGameUseCase,
     $unlockMonsterSpeciesUseCase,
     $gainMonsterExperienceUseCase,
-    $getAvailableMonstersUseCase
+    $getAvailableMonstersUseCase,
+    $updateDungeonStatusUseCase
 );
 $dungeonController = new DungeonController($addRoomUseCase, $getDungeonStateUseCase);
 $dataController = new DataController(
@@ -116,6 +119,7 @@ $app->post('/api/game/reset', [$gameController, 'resetGame']);
 $app->post('/api/game/unlock-species', [$gameController, 'unlockMonsterSpecies']);
 $app->post('/api/game/gain-experience', [$gameController, 'gainMonsterExperience']);
 $app->get('/api/game/available-monsters', [$gameController, 'getAvailableMonsters']);
+$app->post('/api/game/status', [$gameController, 'updateStatus']);
 $app->get('/api/dungeon/state', [$dungeonController, 'getDungeonState']);
 $app->post('/api/dungeon/add-room', [$dungeonController, 'addRoom']);
 

@@ -54,6 +54,11 @@ export const resetGameAPI = async () => {
   return apiClient.resetGame();
 };
 
+// Update dungeon status via backend
+export const updateDungeonStatus = async (status: string) => {
+  return apiClient.updateDungeonStatus(status);
+};
+
 // Game constants from backend (cached)
 export const fetchGameConstantsData = async () => {
   if (gameConstantsCache === null) {

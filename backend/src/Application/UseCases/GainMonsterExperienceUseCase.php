@@ -19,11 +19,10 @@ class GainMonsterExperienceUseCase
             return ['success' => false, 'error' => 'Game not found'];
         }
 
-        // Add experience to the monster
+        // Add experience to the monster record
         $previousExp = $game->getMonsterExperience($monsterName);
         $newExp = $game->addMonsterExperience($monsterName, $experience);
-        
-        // Check for tier unlocks
+
         $monsterStats = $this->gameLogic->getMonsterStats($monsterName);
         if (!$monsterStats) {
             return ['success' => false, 'error' => 'Invalid monster name'];
@@ -31,21 +30,23 @@ class GainMonsterExperienceUseCase
 
         $speciesName = $monsterStats['species'] ?? null;
         $tierUnlocks = [];
-        
+
         if ($speciesName) {
-            $speciesTotalExp = $game->getSpeciesTotalExperience($speciesName);
-            $newUnlockedTier = $this->gameLogic->calculateUnlockedTier($speciesTotalExp);
-            $previousUnlockedTier = $this->gameLogic->calculateUnlockedTier($speciesTotalExp - $experience);
-            
+            $previousSpeciesExp = $game->getSpeciesTotalExperience($speciesName);
+            $game->addSpeciesExperience($speciesName, $experience);
+            $newSpeciesExp = $game->getSpeciesTotalExperience($speciesName);
+
+            $previousUnlockedTier = $this->gameLogic->calculateUnlockedTier($previousSpeciesExp);
+            $newUnlockedTier = $this->gameLogic->calculateUnlockedTier($newSpeciesExp);
+
             if ($newUnlockedTier > $previousUnlockedTier) {
-                $game->unlockTier($speciesName, $newUnlockedTier);
                 $tierUnlocks[] = [
                     'species' => $speciesName,
                     'tier' => $newUnlockedTier
                 ];
             }
         }
-        
+
         // Save game state
         $this->gameRepo->save($game);
 
@@ -55,7 +56,9 @@ class GainMonsterExperienceUseCase
             'previousExp' => $previousExp,
             'newExp' => $newExp,
             'expGained' => $experience,
-            'tierUnlocks' => $tierUnlocks
+            'tierUnlocks' => $tierUnlocks,
+            'speciesExperience' => $game->getSpeciesExperience(),
+            'monsterExperience' => $game->getMonsterExperienceMap()
         ];
     }
 }

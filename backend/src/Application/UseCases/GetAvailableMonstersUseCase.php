@@ -20,14 +20,21 @@ class GetAvailableMonstersUseCase
         }
 
         $availableMonsters = [];
+        $perSpecies = [];
         $unlockedSpecies = $game->getUnlockedSpecies();
-        
+
         foreach ($unlockedSpecies as $speciesName) {
             $speciesTotalExp = $game->getSpeciesTotalExperience($speciesName);
             $unlockedTier = $this->gameLogic->calculateUnlockedTier($speciesTotalExp);
-            
+
             $speciesMonsters = $this->gameLogic->getMonstersForSpeciesAndTier($speciesName, $unlockedTier);
             $availableMonsters = array_merge($availableMonsters, $speciesMonsters);
+
+            $perSpecies[$speciesName] = [
+                'experience' => $speciesTotalExp,
+                'unlockedTier' => $unlockedTier,
+                'monsters' => $speciesMonsters
+            ];
         }
 
         // Sort by tier
@@ -37,7 +44,8 @@ class GetAvailableMonstersUseCase
 
         return [
             'success' => true,
-            'monsters' => $availableMonsters
+            'monsters' => $availableMonsters,
+            'species' => $perSpecies
         ];
     }
 }

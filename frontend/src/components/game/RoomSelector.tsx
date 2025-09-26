@@ -34,6 +34,7 @@ export const RoomSelector: React.FC = () => {
   
   // Get current game data from simplified state
   const mana = gameState?.mana || 0;
+  const canBuild = gameState?.canModifyDungeon ?? false;
   const totalFloors = floors.length;
   
   // Calculate the cost for the next room
@@ -96,6 +97,11 @@ export const RoomSelector: React.FC = () => {
   }, [floors, totalFloors, gameConstants]);
 
   const handleAddRoom = async () => {
+    if (!canBuild) {
+      console.warn('Dungeon must be closed and free of adventurers before adding rooms.');
+      return;
+    }
+
     if (mana >= roomCost && gameConstants) {
       try {
         const deepestFloor = floors.find((f: any) => f.isDeepest);
@@ -134,6 +140,7 @@ export const RoomSelector: React.FC = () => {
   };
 
   const canAfford = mana >= roomCost;
+  const canInteract = canAfford && canBuild;
 
   return (
     <div className="bg-gray-800 p-4 rounded-lg">
@@ -144,21 +151,23 @@ export const RoomSelector: React.FC = () => {
           <h4 className="font-semibold text-gray-300 mb-2">Add Room</h4>
           <button
             className={`w-full p-3 rounded border-2 transition-all ${
-              canAfford 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500' 
+              canInteract
+                ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500'
                 : 'bg-gray-600 border-gray-500 text-gray-400 cursor-not-allowed'
             }`}
             onClick={handleAddRoom}
-            disabled={!canAfford}
+            disabled={!canInteract}
           >
             <div className="flex justify-between items-center">
               <span className="font-bold">Add New Room</span>
-              <span className={`text-sm font-bold ${canAfford ? 'text-blue-200' : 'text-red-400'}`}>
+              <span className={`text-sm font-bold ${canInteract ? 'text-blue-200' : 'text-red-400'}`}>
                 {roomCost}💎
               </span>
             </div>
             <div className="text-xs mt-1 opacity-90">
-              {displayMessage}
+              {!canBuild
+                ? 'Close the dungeon and wait for adventurers to leave before constructing.'
+                : displayMessage}
             </div>
           </button>
         </div>

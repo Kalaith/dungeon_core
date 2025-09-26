@@ -31,9 +31,14 @@ class GetDungeonStateUseCase
 
         // Structure the data
         $floorsData = [];
+        $deepestFloorNumber = null;
+        foreach ($floors as $floor) {
+            $deepestFloorNumber = max($deepestFloorNumber ?? $floor->getNumber(), $floor->getNumber());
+        }
+
         foreach ($floors as $floor) {
             $rooms = $this->dungeonRepo->getRoomsByFloorId($floor->getId());
-            
+
             $roomsData = [];
             foreach ($rooms as $room) {
                 $roomMonsters = array_filter($monsters, function($monster) use ($room) {
@@ -54,16 +59,17 @@ class GetDungeonStateUseCase
                             'type' => $monster->getType(),
                             'hp' => $monster->getHp(),
                             'maxHp' => $monster->getMaxHp(),
-                            'alive' => $monster->isAlive()
+                            'alive' => $monster->isAlive(),
+                            'isBoss' => $monster->isBoss()
                         ];
                     }, array_values($roomMonsters))
                 ];
             }
-            
+
             $floorsData[] = [
                 'id' => $floor->getId(),
                 'number' => $floor->getNumber(),
-                'isDeepest' => false, // Default for now - would need logic to determine
+                'isDeepest' => $deepestFloorNumber !== null && $floor->getNumber() === $deepestFloorNumber,
                 'rooms' => $roomsData
             ];
         }
@@ -77,7 +83,8 @@ class GetDungeonStateUseCase
                     'hp' => $monster->getHp(),
                     'maxHp' => $monster->getMaxHp(),
                     'roomId' => $monster->getRoomId(),
-                    'alive' => $monster->isAlive()
+                    'alive' => $monster->isAlive(),
+                    'isBoss' => $monster->isBoss()
                 ];
             }, $monsters)
         ];

@@ -4,13 +4,15 @@ namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
 use DungeonCore\Infrastructure\Database\MySQL\MySQLDungeonRepository;
+use DungeonCore\Domain\Services\GameLogic;
 use Exception;
 
 class ResetGameUseCase
 {
     public function __construct(
         private GameRepositoryInterface $gameRepository,
-        private MySQLDungeonRepository $dungeonRepository
+        private MySQLDungeonRepository $dungeonRepository,
+        private GameLogic $gameLogic
     ) {}
 
     public function execute(string $sessionId): array
@@ -41,7 +43,7 @@ class ResetGameUseCase
             error_log("ResetGameUseCase: Player state reset completed");
             
             // Now reinitialize the game with fresh data
-            $initializeUseCase = new InitializeGameUseCase($this->gameRepository, $this->dungeonRepository);
+            $initializeUseCase = new InitializeGameUseCase($this->gameRepository, $this->dungeonRepository, $this->gameLogic);
             $gameData = $initializeUseCase->execute($sessionId);
             
             error_log("ResetGameUseCase: Game reinitialization completed");
