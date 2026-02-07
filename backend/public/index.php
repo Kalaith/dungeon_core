@@ -15,10 +15,11 @@ if (file_exists($envFile)) {
     }
 }
 
-use Slim\Factory\AppFactory;
+use DungeonCore\Core\Router;
 use DungeonCore\Controllers\GameController;
 use DungeonCore\Controllers\DungeonController;
 use DungeonCore\Controllers\DataController;
+use DungeonCore\Controllers\AuthController;
 use DungeonCore\Application\UseCases\GetGameStateUseCase;
 use DungeonCore\Application\UseCases\GetDungeonStateUseCase;
 use DungeonCore\Application\UseCases\PlaceMonsterUseCase;
@@ -94,40 +95,41 @@ $dataController = new DataController(
     $getFloorScalingUseCase
 );
 
-// Create Slim app
-$app = AppFactory::create();
+// Router
+$router = new Router();
 
-// Add CORS middleware - this MUST be the first middleware
-$app->add(function ($request, $handler) {
-    $response = $handler->handle($request);
-    return $response
-        ->withHeader('Access-Control-Allow-Origin', '*')
-        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Session-ID')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-});
+// Set base path for subdirectory deployment
+if (isset($_ENV['APP_BASE_PATH']) && $_ENV['APP_BASE_PATH']) {
+    $router->setBasePath(rtrim($_ENV['APP_BASE_PATH'], '/'));
+} else {
+    $requestPath = $_SERVER['REQUEST_URI'] ?? '';
+    $requestPath = parse_url($requestPath, PHP_URL_PATH) ?? '';
+    $apiPos = strpos($requestPath, '/api');
+    if ($apiPos !== false) {
+        $basePath = substr($requestPath, 0, $apiPos);
+        if ($basePath !== '') {
+            $router->setBasePath($basePath);
+        }
+    } elseif (isset($_SERVER['SCRIPT_NAME'])) {
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $basePath = str_replace('/public/index.php', '', $scriptName);
+        if ($basePath !== $scriptName && $basePath !== '') {
+            $router->setBasePath($basePath);
+        }
+    }
+}
 
-// Handle preflight requests first
-$app->options('/{routes:.+}', function ($request, $response, $args) {
-    return $response;
-});
+// Handle CORS preflight
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Headers: Content-Type, Accept, Origin, Authorization');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    http_response_code(200);
+    exit;
+}
 
-// Routes
-$app->get('/api/game/initialize', [$gameController, 'initialize']);
-$app->get('/api/game/state', [$gameController, 'getState']);
-$app->post('/api/game/place-monster', [$gameController, 'placeMonster']);
-$app->post('/api/game/reset', [$gameController, 'resetGame']);
-$app->post('/api/game/unlock-species', [$gameController, 'unlockMonsterSpecies']);
-$app->post('/api/game/gain-experience', [$gameController, 'gainMonsterExperience']);
-$app->get('/api/game/available-monsters', [$gameController, 'getAvailableMonsters']);
-$app->post('/api/game/status', [$gameController, 'updateStatus']);
-$app->get('/api/dungeon/state', [$dungeonController, 'getDungeonState']);
-$app->post('/api/dungeon/add-room', [$dungeonController, 'addRoom']);
+// Load routes
+(require __DIR__ . '/../src/Routes/router.php')($router, $gameController, $dungeonController, $dataController);
 
-// Data endpoints
-$app->get('/api/data/game-constants', [$dataController, 'getGameConstants']);
-$app->get('/api/data/monster-types', [$dataController, 'getMonsterTypes']);
-$app->get('/api/data/monster-traits', [$dataController, 'getMonsterTraits']);
-$app->get('/api/data/equipment', [$dataController, 'getEquipmentData']);
-$app->get('/api/data/floor-scaling', [$dataController, 'getFloorScaling']);
-
-$app->run();
+// Run router
+$router->handle();

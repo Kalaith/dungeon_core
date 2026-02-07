@@ -24,7 +24,6 @@ The project follows a modern full-stack architecture:
 
 ### Backend (`backend/`)
 - **PHP 8.1+** with **Clean Architecture** principles
-- **Slim Framework** for REST API
 - **MySQL** database with automatic migrations
 - Domain-driven design with clear separation of concerns
 

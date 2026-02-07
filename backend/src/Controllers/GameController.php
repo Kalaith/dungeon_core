@@ -10,8 +10,8 @@ use DungeonCore\Application\UseCases\UnlockMonsterSpeciesUseCase;
 use DungeonCore\Application\UseCases\GainMonsterExperienceUseCase;
 use DungeonCore\Application\UseCases\GetAvailableMonstersUseCase;
 use DungeonCore\Application\UseCases\UpdateDungeonStatusUseCase;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use DungeonCore\Http\Response;
+use DungeonCore\Http\Request;
 
 class GameController
 {
@@ -47,7 +47,7 @@ class GameController
     public function placeMonster(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
-        $data = json_decode($request->getBody()->getContents(), true);
+        $data = $request->getParsedBody();
         
         $result = $this->placeMonsterUseCase->execute(
             $sessionId,
@@ -63,7 +63,7 @@ class GameController
     public function unlockMonsterSpecies(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
-        $data = json_decode($request->getBody()->getContents(), true);
+        $data = $request->getParsedBody();
         
         $result = $this->unlockMonsterSpeciesUseCase->execute(
             $sessionId,
@@ -77,7 +77,7 @@ class GameController
     public function gainMonsterExperience(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
-        $data = json_decode($request->getBody()->getContents(), true);
+        $data = $request->getParsedBody();
         
         $result = $this->gainMonsterExperienceUseCase->execute(
             $sessionId,
@@ -102,7 +102,7 @@ class GameController
     public function updateStatus(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
-        $data = json_decode($request->getBody()->getContents(), true);
+        $data = $request->getParsedBody();
 
         $result = $this->updateDungeonStatusUseCase->execute(
             $sessionId,
@@ -124,8 +124,10 @@ class GameController
 
     private function getSessionId(Request $request): string
     {
-        // Simple session handling - could be improved with proper session management
-        $headers = $request->getHeaders();
-        return $headers['X-Session-ID'][0] ?? session_id();
+        $authUser = $request->getAttribute('auth_user');
+        if ($authUser && isset($authUser['id'])) {
+            return (string) $authUser['id'];
+        }
+        return session_id();
     }
 }

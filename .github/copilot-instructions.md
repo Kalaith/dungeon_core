@@ -3,11 +3,11 @@
 **ALWAYS** follow these instructions first and only fallback to additional search and context gathering if the information here is incomplete or found to be in error.
 
 ## Project Overview
-Dungeon Core is a full-stack web application with a React TypeScript frontend and PHP Slim framework backend. The game simulates a dungeon management system where players build dungeons, place monsters, and defend against adventurer parties.
+Dungeon Core is a full-stack web application with a React TypeScript frontend and PHP backend. The game simulates a dungeon management system where players build dungeons, place monsters, and defend against adventurer parties.
 
 ## Architecture
 - **Frontend**: React 19.1.0 + TypeScript 5.8.3 + Vite 6.3.5 + Tailwind CSS 4.1.10
-- **Backend**: PHP 8.3.6 + Slim Framework 4.15.0 + MySQL 8.0
+- **Backend**: PHP 8.3.6 + MySQL 8.0
 - **Development Servers**: Frontend runs on localhost:5173, Backend runs on localhost:8000
 
 ## Required System Dependencies

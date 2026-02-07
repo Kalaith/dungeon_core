@@ -17,17 +17,16 @@ import type { ResetGameResponse } from './resetTypes';
 
 class ApiClient {
   private baseUrl = 'http://localhost:8000/api';
-  private sessionId = this.getOrCreateSessionId();
 
-  private getOrCreateSessionId(): string {
-    // For now, always use the first session to avoid login complexity
-    const fixedSessionId = 'x5netciu1jmd8tvw1h';
-    
-    // Clear any existing stored session to force fresh connection
-    localStorage.removeItem('dungeon-core-session-id');
-    
-    console.log('Using fixed session ID:', fixedSessionId);
-    return fixedSessionId;
+  private getAuthToken(): string | null {
+    try {
+      const raw = localStorage.getItem('auth-storage');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
+      return parsed.state?.token ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -42,11 +41,14 @@ class ApiClient {
       });
     }
     
+    const authToken = this.getAuthToken();
+    const authHeader = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'X-Session-ID': this.sessionId,
+        ...authHeader,
         ...options?.headers,
       },
     });
