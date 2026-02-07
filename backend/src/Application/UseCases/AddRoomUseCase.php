@@ -19,6 +19,16 @@ class AddRoomUseCase
             return ['success' => false, 'error' => 'Game not found'];
         }
 
+        if (!$game->canModifyDungeon()) {
+            return [
+                'success' => false,
+                'error' => 'Dungeon must be closed and free of adventurers before building.',
+                'status' => $game->getStatus(),
+                'activeAdventurerParties' => $game->getActivePartyCount(),
+                'canModifyDungeon' => $game->canModifyDungeon()
+            ];
+        }
+
         // Check mana cost
         if (!$game->spendMana($cost)) {
             return ['success' => false, 'error' => 'Insufficient mana'];
@@ -34,7 +44,9 @@ class AddRoomUseCase
             'success' => true,
             'roomId' => $roomId,
             'type' => $roomType,
-            'position' => $position
+            'position' => $position,
+            'status' => $game->getStatus(),
+            'activeAdventurerParties' => $game->getActivePartyCount()
         ];
     }
 }

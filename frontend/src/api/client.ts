@@ -10,7 +10,8 @@ import type {
   GetAvailableMonstersResponse,
   AddRoomRequest,
   AddRoomResponse,
-  InitializeGameResponse
+  InitializeGameResponse,
+  UpdateDungeonStatusResponse
 } from './types';
 import type { ResetGameResponse } from './resetTypes';
 
@@ -100,6 +101,13 @@ class ApiClient {
   async resetGame(): Promise<ResetGameResponse> {
     return this.request<ResetGameResponse>('/game/reset', {
       method: 'POST',
+    });
+  }
+
+  async updateDungeonStatus(status: string): Promise<UpdateDungeonStatusResponse> {
+    return this.request<UpdateDungeonStatusResponse>('/game/status', {
+      method: 'POST',
+      body: JSON.stringify({ status }),
     });
   }
 

@@ -4,12 +4,14 @@ namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
 use DungeonCore\Domain\Repositories\DungeonRepositoryInterface;
+use DungeonCore\Domain\Services\GameLogic;
 
 class InitializeGameUseCase
 {
     public function __construct(
         private GameRepositoryInterface $gameRepo,
-        private DungeonRepositoryInterface $dungeonRepo
+        private DungeonRepositoryInterface $dungeonRepo,
+        private GameLogic $gameLogic
     ) {}
 
     public function execute(string $sessionId): array
@@ -67,6 +69,14 @@ class InitializeGameUseCase
         
         error_log('Final roomsData: ' . json_encode($roomsData));
         
+        $speciesProgress = [];
+        foreach ($game->getSpeciesExperience() as $species => $xp) {
+            $speciesProgress[$species] = [
+                'experience' => $xp,
+                'unlockedTier' => $this->gameLogic->calculateUnlockedTier($xp)
+            ];
+        }
+
         $result = [
             'game' => [
                 'id' => $game->getId(),
@@ -89,6 +99,10 @@ class InitializeGameUseCase
                 'deepCoreBonus' => 0,
                 'unlockedMonsterSpecies' => $game->getUnlockedSpecies(),
                 'speciesExperience' => $game->getSpeciesExperience(),
+                'monsterExperience' => $game->getMonsterExperienceMap(),
+                'activeAdventurerParties' => $game->getActivePartyCount(),
+                'canModifyDungeon' => $game->canModifyDungeon(),
+                'speciesProgress' => $speciesProgress,
                 'log' => [
                     [
                         'message' => 'Welcome to Dungeon Core Simulator v1.2!',

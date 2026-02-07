@@ -6,14 +6,16 @@ interface ResourceBarProps {
 }
 
 export const ResourceBar: React.FC<ResourceBarProps> = ({ gameState }) => {
-  const { 
-    mana, 
-    maxMana, 
-    gold, 
-    souls, 
-    day, 
-    hour, 
-    status 
+  const {
+    mana,
+    maxMana,
+    gold,
+    souls,
+    day,
+    hour,
+    status,
+    activeAdventurerParties,
+    canModifyDungeon
   } = gameState;
 
   const formatTime = (hour: number) => {
@@ -76,6 +78,14 @@ export const ResourceBar: React.FC<ResourceBarProps> = ({ gameState }) => {
             <span className={`font-bold ${getStatusColor(status)}`}>
               {status}
             </span>
+          </div>
+          <div className="flex items-center gap-3 text-gray-300">
+            <span>
+              Adventurer Parties: <span className="font-bold">{activeAdventurerParties}</span>
+            </span>
+            {!canModifyDungeon && (
+              <span className="text-red-400 font-semibold">Building Locked</span>
+            )}
           </div>
         </div>
       </div>

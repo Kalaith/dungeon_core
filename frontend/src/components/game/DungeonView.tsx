@@ -280,19 +280,19 @@ export const DungeonView: React.FC<DungeonViewProps> = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Get monster placement functions from store
-  const { selectedMonster, selectMonster, placeMonster } = useBackendGameStore();
+  const { selectedMonster, selectMonster, placeMonster, gameState } = useBackendGameStore();
 
   // Handle room clicks internally
   const handleRoomClick = async (floorNumber: number, roomPosition: number): Promise<void> => {
     if (selectedMonster !== null) {
+      if (!gameState?.canModifyDungeon) {
+        setError('You must close the dungeon and wait for adventurers to leave before building.');
+        return;
+      }
       try {
-        // Calculate room ID based on floor and position
-        // This is a simple calculation - rooms are numbered sequentially
-        const roomId = (floorNumber - 1) * 10 + roomPosition;
-        
-        console.log(`Attempting to place ${selectedMonster} in room ${roomId} (floor ${floorNumber}, position ${roomPosition})`);
-        
-        const success = await placeMonster(roomId, selectedMonster);
+        console.log(`Attempting to place ${selectedMonster} on floor ${floorNumber} position ${roomPosition}`);
+
+        const success = await placeMonster(floorNumber, roomPosition, selectedMonster);
         if (success) {
           console.log('Monster placed successfully!');
           selectMonster(null); // Clear selection after successful placement
@@ -306,6 +306,7 @@ export const DungeonView: React.FC<DungeonViewProps> = () => {
       }
     } else {
       console.log(`Clicked room at floor ${floorNumber}, position ${roomPosition} - no monster selected`);
+      setError(null);
     }
   };
 
@@ -321,17 +322,16 @@ export const DungeonView: React.FC<DungeonViewProps> = () => {
             ...room,
             monsters: room.monsters.map(monster => ({
               ...monster,
-              isBoss: false, // Default for now - backend should provide this
               floorNumber: room.floorNumber,
               scaledStats: {
-                hp: monster.maxHp, // Use maxHp as scaled HP
-                attack: 5, // Default values - could be calculated
+                hp: monster.maxHp,
+                attack: 5,
                 defense: 2
               }
             }))
           }))
         }));
-        
+
         setFloors(transformedFloors);
         setError(null); // Clear any previous errors
       }

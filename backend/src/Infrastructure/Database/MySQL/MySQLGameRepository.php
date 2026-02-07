@@ -24,7 +24,7 @@ class MySQLGameRepository implements GameRepositoryInterface
     public function save(Game $game): void
     {
         $stmt = $this->connection->prepare(
-            'UPDATE players SET mana = ?, mana_regen = ?, gold = ?, souls = ?, day = ?, hour = ?, status = ?, unlocked_species = ?, species_experience = ? WHERE id = ?'
+            'UPDATE players SET mana = ?, mana_regen = ?, gold = ?, souls = ?, day = ?, hour = ?, status = ?, unlocked_species = ?, species_experience = ?, monster_experience = ? WHERE id = ?'
         );
         $stmt->execute([
             $game->getMana(),
@@ -36,6 +36,7 @@ class MySQLGameRepository implements GameRepositoryInterface
             $game->getStatus(),
             json_encode($game->getUnlockedSpecies()),
             json_encode($game->getSpeciesExperience()),
+            json_encode($game->getMonsterExperienceMap()),
             $game->getId()
         ]);
     }
@@ -43,13 +44,13 @@ class MySQLGameRepository implements GameRepositoryInterface
     public function create(string $sessionId): Game
     {
         $stmt = $this->connection->prepare(
-            'INSERT INTO players (session_id, mana, max_mana, mana_regen, gold, souls, day, hour, status, unlocked_species, species_experience) 
-             VALUES (?, 50, 100, 1, 100, 0, 1, 6, "Open", "[]", "{}")'
+            'INSERT INTO players (session_id, mana, max_mana, mana_regen, gold, souls, day, hour, status, unlocked_species, species_experience, monster_experience)
+             VALUES (?, 50, 100, 1, 100, 0, 1, 6, "Open", "[]", "{}", "{}")'
         );
         $stmt->execute([$sessionId]);
-        
+
         $id = $this->connection->lastInsertId();
-        return new Game($id, 50, 100, 1, 100, 0, 1, 6, 'Open', [], []);
+        return new Game($id, 50, 100, 1, 100, 0, 1, 6, 'Open', [], [], [], 0);
     }
 
     public function resetGame(int $gameId): void
@@ -77,6 +78,7 @@ class MySQLGameRepository implements GameRepositoryInterface
     {
         $unlockedSpecies = [];
         $speciesExperience = [];
+        $monsterExperience = [];
         
         // Parse JSON fields if they exist
         if (isset($data['unlocked_species']) && !empty($data['unlocked_species'])) {
@@ -93,7 +95,14 @@ class MySQLGameRepository implements GameRepositoryInterface
             }
         }
         
-        return new Game(
+        if (isset($data['monster_experience']) && !empty($data['monster_experience'])) {
+            $decoded = json_decode($data['monster_experience'], true);
+            if (is_array($decoded)) {
+                $monsterExperience = $decoded;
+            }
+        }
+
+        $game = new Game(
             $data['id'],
             $data['mana'],
             $data['max_mana'],
@@ -104,7 +113,16 @@ class MySQLGameRepository implements GameRepositoryInterface
             $data['hour'],
             $data['status'],
             $unlockedSpecies,
-            $speciesExperience
+            $speciesExperience,
+            $monsterExperience,
+            0
         );
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) FROM adventurer_parties WHERE player_id = ? AND retreating = 0');
+        $stmt->execute([$data['id']]);
+        $activeParties = (int) $stmt->fetchColumn();
+        $game->setActivePartyCount($activeParties);
+
+        return $game;
     }
 }

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useBackendGameStore } from "../../stores/backendGameStore";
 import { useSpeciesStore } from "../../stores/speciesStore";
 import type { MonsterType } from "../../types/game";
-import { getMonsterTypes, unlockMonsterSpeciesAPI } from "../../api/gameApi";
+import { getMonsterTypes, unlockMonsterSpeciesAPI, fetchGameConstantsData } from "../../api/gameApi";
 
 export const MonsterSelector: React.FC = React.memo(() => {
   const selectedMonster = useBackendGameStore((state) => state.selectedMonster);
@@ -11,9 +11,10 @@ export const MonsterSelector: React.FC = React.memo(() => {
   const gameState = useBackendGameStore((state) => state.gameState);
   const mana = gameState?.mana || 0;
   const gold = gameState?.gold || 0;
-  const { unlockedSpecies } = useSpeciesStore();
+  const { unlockedSpecies, speciesProgress } = useSpeciesStore();
   const [monsterTypes, setMonsterTypes] = useState<{[key: string]: MonsterType}>({});
   const [loading, setLoading] = useState(false);
+  const [gameConstants, setGameConstants] = useState<Record<string, number | string | null> | null>(null);
 
   console.log('MonsterSelector render - unlockedMonsterSpecies:', unlockedSpecies);
 
@@ -24,6 +25,9 @@ export const MonsterSelector: React.FC = React.memo(() => {
         const types = await getMonsterTypes();
         console.log('Monster types received:', types);
         setMonsterTypes(types);
+        const constants = await fetchGameConstantsData();
+        console.log('Game constants received:', constants);
+        setGameConstants(constants as unknown as Record<string, number | string | null>);
       } catch (error) {
         console.error('Error loading monster data:', error);
       }
@@ -51,7 +55,28 @@ export const MonsterSelector: React.FC = React.memo(() => {
     if (!selectedSpecies && unlockedSpecies.length > 0) {
       setSelectedSpecies(unlockedSpecies[0]);
     }
-  }, [unlockedSpecies.length, selectedSpecies]);
+  }, [unlockedSpecies, selectedSpecies]);
+
+  const getSpeciesUnlockCost = useCallback((speciesName: string): number => {
+    if (!gameConstants) {
+      return 1000;
+    }
+
+    const upper = speciesName.toUpperCase();
+    const overrideKey = `SPECIES_COST_${upper}`;
+
+    const overrideValue = gameConstants[overrideKey];
+    if (overrideValue !== undefined && overrideValue !== null) {
+      return Number(overrideValue);
+    }
+
+    const defaultCost = gameConstants['SPECIES_UNLOCK_COST'];
+    if (defaultCost !== undefined && defaultCost !== null) {
+      return Number(defaultCost);
+    }
+
+    return 1000;
+  }, [gameConstants]);
 
   const handleSpeciesSelect = (speciesName: string) => {
     console.log('Selecting species:', speciesName);
@@ -67,13 +92,16 @@ export const MonsterSelector: React.FC = React.memo(() => {
     
     if (!selectedSpecies) return [];
     
+    const unlockedTier = speciesProgress[selectedSpecies]?.unlockedTier ?? 1;
+
     const filtered = Object.values(monsterTypes)
-      .filter(monster => monster.species === selectedSpecies);
-    
+      .filter(monster => monster.species === selectedSpecies)
+      .filter(monster => (monster.tier || 1) <= unlockedTier);
+
     console.log('Filtered monsters for', selectedSpecies, ':', filtered);
-    
+
     return filtered.sort((a, b) => (a.tier || 1) - (b.tier || 1));
-  }, [selectedSpecies, monsterTypes]);
+  }, [selectedSpecies, monsterTypes, speciesProgress]);
 
   // Handle species unlock
   const handleUnlockSpecies = async (speciesName: string) => {
@@ -96,9 +124,6 @@ export const MonsterSelector: React.FC = React.memo(() => {
       setLoading(false);
     }
   };
-
-  // Species unlock cost (hardcoded for now, could come from backend)
-  const SPECIES_UNLOCK_COST = 1000;
 
   // Debug logging
   // Only log when species data actually changes, not on every render
@@ -128,7 +153,8 @@ export const MonsterSelector: React.FC = React.memo(() => {
         <div className="flex flex-wrap gap-2">
           {availableSpecies.map((speciesName: string) => {
             const isUnlocked = unlockedSpecies.includes(speciesName);
-            const canAffordUnlock = gold >= SPECIES_UNLOCK_COST;
+            const speciesCost = getSpeciesUnlockCost(speciesName);
+            const canAffordUnlock = gold >= speciesCost;
 
             return (
               <button
@@ -147,9 +173,9 @@ export const MonsterSelector: React.FC = React.memo(() => {
                   }
                 }}
                 disabled={(!isUnlocked && !canAffordUnlock) || loading}
-                title={isUnlocked ? `Select ${speciesName}` : `Unlock for ${SPECIES_UNLOCK_COST} Gold`}
+                title={isUnlocked ? `Select ${speciesName}` : `Unlock for ${speciesCost} Gold`}
               >
-                {speciesName} {isUnlocked ? '' : `(${SPECIES_UNLOCK_COST}🪙)`}
+                {speciesName} {isUnlocked ? '' : `(${speciesCost}🪙)`}
               </button>
             );
           })}
@@ -174,6 +200,16 @@ export const MonsterSelector: React.FC = React.memo(() => {
             </button>
           ))}
         </div>
+        {selectedSpecies && (
+          <div className="mt-2 text-xs text-gray-300">
+            <span className="font-semibold">Tier Unlocked:</span> {speciesProgress[selectedSpecies]?.unlockedTier ?? 1}
+            {speciesProgress[selectedSpecies] && (
+              <span className="ml-2">
+                XP: {speciesProgress[selectedSpecies].experience.toLocaleString()}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Monster List for Selected Species */}

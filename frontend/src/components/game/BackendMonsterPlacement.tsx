@@ -3,15 +3,17 @@ import { useBackendGameStore } from '../../stores/backendGameStore';
 
 export const BackendMonsterPlacement: React.FC = () => {
   const { gameState, selectedMonster, placeMonster, selectMonster } = useBackendGameStore();
-  const [roomId, setRoomId] = useState<number>(1);
+  const [floorNumber, setFloorNumber] = useState<number>(1);
+  const [roomPosition, setRoomPosition] = useState<number>(1);
 
   const handlePlaceMonster = async () => {
     if (!selectedMonster) return;
-    
-    const success = await placeMonster(roomId, selectedMonster);
+
+    const success = await placeMonster(floorNumber, roomPosition, selectedMonster);
     if (success) {
       selectMonster(null);
-      setRoomId(1);
+      setFloorNumber(1);
+      setRoomPosition(1);
     }
   };
 
@@ -27,23 +29,36 @@ export const BackendMonsterPlacement: React.FC = () => {
             Selected Monster: <span className="font-bold text-blue-400">{selectedMonster}</span>
           </div>
           
-          <div>
-            <label className="block text-white mb-2">Room ID:</label>
-            <input
-              type="number"
-              value={roomId}
-              onChange={(e) => setRoomId(parseInt(e.target.value))}
-              className="bg-gray-700 text-white px-3 py-2 rounded"
-              min="1"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white mb-2">Floor Number:</label>
+              <input
+                type="number"
+                value={floorNumber}
+                onChange={(e) => setFloorNumber(parseInt(e.target.value) || 1)}
+                className="bg-gray-700 text-white px-3 py-2 rounded"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-white mb-2">Room Position:</label>
+              <input
+                type="number"
+                value={roomPosition}
+                onChange={(e) => setRoomPosition(parseInt(e.target.value) || 1)}
+                className="bg-gray-700 text-white px-3 py-2 rounded"
+                min="1"
+              />
+            </div>
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={handlePlaceMonster}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              disabled={!gameState.canModifyDungeon}
+              className={`px-4 py-2 rounded ${gameState.canModifyDungeon ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
             >
-              Place Monster
+              {gameState.canModifyDungeon ? 'Place Monster' : 'Close Dungeon to Build'}
             </button>
             <button
               onClick={() => selectMonster(null)}
