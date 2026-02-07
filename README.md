@@ -180,3 +180,5 @@ This project is licensed under the MIT License - see the individual component RE
 - Database schema is automatically managed through migrations
 - The publishing script handles both preview and production deployments
 - See individual component README files for detailed setup and development instructions
+
+Part of the WebHatchery game collection.
