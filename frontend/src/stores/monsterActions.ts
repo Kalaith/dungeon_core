@@ -58,13 +58,14 @@ export const placeMonster = async (set: (partial: Partial<FullGameStore>) => voi
     addLog(`Spawned ${result.monster!.type}${result.monster!.isBoss ? ' (Boss)' : ''} on floor ${floorNumber}, room ${roomPosition} for ${result.costPaid} mana`);
     
     return true;
-  } catch (error) {
+  } catch {
     addLog("Network error: Could not place monster");
     return false;
   }
 };
 
-export const unlockMonsterSpecies = async (set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void, _get: () => FullGameStore, speciesName: string, addLog: (entry: LogEntry | string) => void) => {
+export const unlockMonsterSpecies = async (set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void, get: () => FullGameStore, speciesName: string, addLog: (entry: LogEntry | string) => void) => {
+  void get;
   try {
     const result = await unlockMonsterSpeciesAPI(speciesName);
     
@@ -84,12 +85,13 @@ export const unlockMonsterSpecies = async (set: (updater: (state: FullGameStore)
     }));
     
     addLog(`Unlocked new monster species: ${speciesName}!`);
-  } catch (error) {
+  } catch {
     addLog("Network error: Could not unlock species");
   }
 };
 
-export const gainMonsterExperience = async (set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void, _get: () => FullGameStore, monsterName: string, exp: number, addLog: (entry: LogEntry | string) => void) => {
+export const gainMonsterExperience = async (set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void, get: () => FullGameStore, monsterName: string, exp: number, addLog: (entry: LogEntry | string) => void) => {
+  void get;
   try {
     const result = await gainMonsterExperienceAPI(monsterName, exp);
     
@@ -112,12 +114,14 @@ export const gainMonsterExperience = async (set: (updater: (state: FullGameStore
         addLog(`Unlocked new tier (${unlock.tier}) for ${unlock.species} monsters!`);
       });
     }
-  } catch (error) {
+  } catch {
     addLog("Network error: Could not gain experience");
   }
 };
 
-export const getAvailableMonsters = async (_set: (partial: Partial<FullGameStore>) => void, _get: () => FullGameStore) => {
+export const getAvailableMonsters = async (set: (partial: Partial<FullGameStore>) => void, get: () => FullGameStore) => {
+  void set;
+  void get;
   try {
     const result = await getAvailableMonstersAPI();
     

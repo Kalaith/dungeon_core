@@ -132,24 +132,24 @@ class ApiClient {
   }
 
   // Data endpoints
-  async getGameConstants(): Promise<any> {
-    return this.request<any>('/data/game-constants');
+  async getGameConstants(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/data/game-constants');
   }
 
-  async getMonsterTypes(): Promise<any> {
-    return this.request<any>('/data/monster-types');
+  async getMonsterTypes(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/data/monster-types');
   }
 
-  async getMonsterTraits(): Promise<any> {
-    return this.request<any>('/data/monster-traits');
+  async getMonsterTraits(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/data/monster-traits');
   }
 
-  async getEquipmentData(): Promise<any> {
-    return this.request<any>('/data/equipment');
+  async getEquipmentData(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/data/equipment');
   }
 
-  async getFloorScaling(): Promise<any> {
-    return this.request<any>('/data/floor-scaling');
+  async getFloorScaling(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/data/floor-scaling');
   }
 }
 

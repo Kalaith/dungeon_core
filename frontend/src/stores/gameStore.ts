@@ -82,6 +82,14 @@ export const useGameStore = create<GameStore>()(
             const gameState = backendData.game;
             const floors = backendData.floors || [];
             
+            const backendMonsterExperience = gameState.monsterExperience;
+            const monsterExperience =
+              backendMonsterExperience &&
+              typeof backendMonsterExperience === 'object' &&
+              !Array.isArray(backendMonsterExperience)
+                ? backendMonsterExperience
+                : {};
+
             set({
               ...gameState,
               floors: floors as DungeonFloor[],
@@ -91,7 +99,7 @@ export const useGameStore = create<GameStore>()(
                 ...entry,
                 type: entry.type as 'system' | 'combat' | 'adventure' | 'building'
               })),
-              monsterExperience: (gameState as any).monsterExperience && !Array.isArray((gameState as any).monsterExperience) ? (gameState as any).monsterExperience : {}
+              monsterExperience
             });
             
             console.log("Game initialized from backend:", backendData);
@@ -193,7 +201,7 @@ export const useGameStore = create<GameStore>()(
             newHour = 0;
             newDay += 1;
           }        // Determine status based on time (but can be overridden by manual control)
-          let status: 'Open' | 'Closing' | 'Closed' | 'Maintenance' = state.status;
+          const status: 'Open' | 'Closing' | 'Closed' | 'Maintenance' = state.status;
           
           // Keep dungeon open 24/7 unless manually closed
           // No automatic status changes based on time

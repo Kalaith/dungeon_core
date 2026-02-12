@@ -139,7 +139,7 @@ export interface MonsterTrait {
   applies_to: string;
   mana_cost?: number;
   cooldown_turns?: number;
-  [key: string]: any; // Allow for other properties
+  [key: string]: unknown; // Allow for other properties
 }
 
 export interface AdventurerClass {

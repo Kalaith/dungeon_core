@@ -214,7 +214,7 @@ export interface InitializeGameResponse {
     selectedMonster: null;
     modalOpen: boolean;
     dungeonLevel: number;
-    adventurerParties: any[];
+    adventurerParties: unknown[];
     nextPartySpawn: number;
     totalFloors: number;
     deepCoreBonus: number;

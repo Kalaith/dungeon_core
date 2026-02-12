@@ -1,9 +1,9 @@
-import type { GameState } from '../types/game';
+import type { GameState, LogEntry } from '../types/game';
 
 // Define a type for the full GameStore actions that will be passed to these functions
 // This avoids circular dependency with the main gameStore.ts file
 interface GameStoreActions {
-  addLog: (entry: any) => void;
+  addLog: (entry: LogEntry | string) => void;
 }
 
 // Combine GameState and GameStoreActions for the GetState/SetState types

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { useBackendGameStore } from "../../stores/backendGameStore";
-import type { DungeonFloor, Room, MonsterType } from "../../types/game";
+import type { DungeonFloor, Room, MonsterType, GameConstants } from "../../types/game";
 import { fetchGameConstantsData, getMonsterTypes, getScaledMonsterStats, getDungeonState } from "../../api/gameApi";
 
 interface DungeonFloorViewProps {
@@ -219,7 +219,7 @@ const RoomComponent: React.FC<{
 };
 
 export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({ floor, onRoomClick }) => {
-  const [gameConstants, setGameConstants] = useState<any>(null);
+  const [gameConstants, setGameConstants] = useState<GameConstants | null>(null);
 
   useEffect(() => {
     const fetchConstants = async () => {
@@ -270,11 +270,7 @@ export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({ floor, onRoo
   );
 };
 
-interface DungeonViewProps {
-  // No props needed - component handles everything internally
-}
-
-export const DungeonView: React.FC<DungeonViewProps> = () => {
+export const DungeonView: React.FC = () => {
   const [floors, setFloors] = useState<DungeonFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
