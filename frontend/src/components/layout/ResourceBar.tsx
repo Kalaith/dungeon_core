@@ -15,21 +15,26 @@ export const ResourceBar: React.FC<ResourceBarProps> = ({ gameState }) => {
     hour,
     status,
     activeAdventurerParties,
-    canModifyDungeon
+    canModifyDungeon,
   } = gameState;
 
   const formatTime = (hour: number) => {
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    const period = hour < 12 ? 'AM' : 'PM';
+    const period = hour < 12 ? "AM" : "PM";
     return `${displayHour}:00 ${period}`;
   };
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open': return 'text-green-600';
-      case 'Closing': return 'text-orange-600';
-      case 'Closed': return 'text-yellow-600';
-      case 'Maintenance': return 'text-red-600';
-      default: return 'text-gray-600';
+      case "Open":
+        return "text-green-600";
+      case "Closing":
+        return "text-orange-600";
+      case "Closed":
+        return "text-yellow-600";
+      case "Maintenance":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   };
 
@@ -46,29 +51,35 @@ export const ResourceBar: React.FC<ResourceBarProps> = ({ gameState }) => {
                 {mana}/{maxMana}
               </div>
               <div className="w-16 md:w-24 bg-gray-700 rounded-full h-1.5">
-                <div 
-                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-300" 
+                <div
+                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${(mana / maxMana) * 100}%` }}
                 />
               </div>
             </div>
-            <span className="text-xs text-blue-300 hidden sm:inline">Backend</span>
+            <span className="text-xs text-blue-300 hidden sm:inline">
+              Backend
+            </span>
           </div>
-          
+
           {/* Gold & Souls */}
           <div className="flex gap-4 md:gap-6">
             <div className="flex items-center gap-1">
               <span className="text-yellow-400 text-lg">💰</span>
-              <span className="text-yellow-300 text-sm md:text-base font-medium">{gold}</span>
+              <span className="text-yellow-300 text-sm md:text-base font-medium">
+                {gold}
+              </span>
             </div>
-            
+
             <div className="flex items-center gap-1">
               <span className="text-purple-400 text-lg">👻</span>
-              <span className="text-purple-300 text-sm md:text-base font-medium">{souls}</span>
+              <span className="text-purple-300 text-sm md:text-base font-medium">
+                {souls}
+              </span>
             </div>
           </div>
         </div>
-        
+
         {/* Bottom Row - Status & Info */}
         <div className="flex flex-wrap gap-2 justify-between items-center text-xs md:text-sm">
           <div className="flex items-center gap-3">
@@ -81,10 +92,13 @@ export const ResourceBar: React.FC<ResourceBarProps> = ({ gameState }) => {
           </div>
           <div className="flex items-center gap-3 text-gray-300">
             <span>
-              Adventurer Parties: <span className="font-bold">{activeAdventurerParties}</span>
+              Adventurer Parties:{" "}
+              <span className="font-bold">{activeAdventurerParties}</span>
             </span>
             {!canModifyDungeon && (
-              <span className="text-red-400 font-semibold">Building Locked</span>
+              <span className="text-red-400 font-semibold">
+                Building Locked
+              </span>
             )}
           </div>
         </div>

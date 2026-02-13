@@ -2,7 +2,7 @@
 
 export interface LogEntry {
   message: string;
-  type: 'system' | 'combat' | 'adventure' | 'building';
+  type: "system" | "combat" | "adventure" | "building";
   timestamp?: number; // Optional, will be auto-added by addLog if missing
 }
 
@@ -14,7 +14,7 @@ export interface GameState {
   souls: number;
   day: number;
   hour: number; // 0-23 hour format
-  status: 'Open' | 'Closing' | 'Closed' | 'Maintenance';
+  status: "Open" | "Closing" | "Closed" | "Maintenance";
   speed: number;
   selectedRoom: number | null;
   selectedMonster: string | null;
@@ -39,7 +39,7 @@ export interface DungeonFloor {
 
 export interface Room {
   id: number;
-  type: 'entrance' | 'normal' | 'boss' | 'core';
+  type: "entrance" | "normal" | "boss" | "core";
   position: number; // Position in the floor (0 = entrance, 1-4 = normal/boss, 5 = core)
   floorNumber: number;
   monsters: Monster[];
@@ -49,7 +49,7 @@ export interface Room {
 }
 
 export interface RoomUpgrade {
-  type: 'trap' | 'treasure' | 'reinforcement' | 'evolution';
+  type: "trap" | "treasure" | "reinforcement" | "evolution";
   name: string;
   effect: string;
   multiplier: number;
@@ -209,7 +209,7 @@ export interface MonsterSpeciesList {
 }
 
 export interface RoomUpgradeData {
-  type: 'trap' | 'treasure' | 'reinforcement' | 'evolution';
+  type: "trap" | "treasure" | "reinforcement" | "evolution";
   name: string;
   effect: string;
   multiplier: number;

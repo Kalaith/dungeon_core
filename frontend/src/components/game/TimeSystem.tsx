@@ -13,7 +13,7 @@ export const TimeSystem: React.FC = () => {
       }
       const gameConstants = await fetchGameConstantsData();
       if (!gameConstants) {
-        console.error('Failed to load game constants');
+        console.error("Failed to load game constants");
         return;
       }
       timeIntervalRef.current = setInterval(() => {

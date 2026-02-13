@@ -10,17 +10,10 @@ import { GameControls } from "../components/game/GameControls";
 import { RoomSelector } from "../components/game/RoomSelector";
 
 export function GamePage() {
-  const { 
-    gameState,
-    loading,
-    error,
-    initializeGame,
-    refreshGameState
-  } = useBackendGameStore();
+  const { gameState, loading, error, initializeGame, refreshGameState } =
+    useBackendGameStore();
 
-  const { 
-    unlockedSpecies
-  } = useSpeciesStore();
+  const { unlockedSpecies } = useSpeciesStore();
 
   const [showSpeciesModal, setShowSpeciesModal] = useState(false);
 
@@ -39,13 +32,13 @@ export function GamePage() {
   // Auto-refresh game state every 5 seconds
   useEffect(() => {
     if (gameState) {
-      console.log('Setting up auto-refresh interval');
+      console.log("Setting up auto-refresh interval");
       const interval = setInterval(() => {
-        console.log('Auto-refreshing game state...');
+        console.log("Auto-refreshing game state...");
         refreshGameState();
       }, 5000);
       return () => {
-        console.log('Clearing auto-refresh interval');
+        console.log("Clearing auto-refresh interval");
         clearInterval(interval);
       };
     }
@@ -66,7 +59,7 @@ export function GamePage() {
         <div className="bg-red-900 p-6 rounded-lg">
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p>{error}</p>
-          <button 
+          <button
             onClick={initializeGame}
             className="mt-4 px-4 py-2 bg-red-700 hover:bg-red-600 rounded"
           >
@@ -84,33 +77,35 @@ export function GamePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <ResourceBar gameState={gameState} />
-      
+
       {showSpeciesModal && (
         <SpeciesSelectionModal
           open={showSpeciesModal}
           onClose={handleSpeciesSelect}
         />
       )}
-      
+
       <div className="container mx-auto px-4 py-6 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left sidebar - Room construction */}
           <div className="lg:col-span-1">
             <RoomSelector />
           </div>
-          
+
           {/* Center - Dungeon view */}
           <div className="lg:col-span-2">
             {/* DungeonView now handles its own floor/room data and monster placement */}
             <DungeonView />
           </div>
-          
+
           {/* Right sidebar - Monster management */}
           <div className="lg:col-span-1">
             <MonsterSelector />
-            
+
             <div className="bg-gray-800 p-4 rounded-lg mt-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">Monsters</h3>
+              <h3 className="text-lg font-semibold mb-3 text-white">
+                Monsters
+              </h3>
               {/* Monsters will be shown by individual room components */}
               <p className="text-gray-400 text-sm">
                 Monsters are displayed in their respective rooms
@@ -119,7 +114,7 @@ export function GamePage() {
           </div>
         </div>
       </div>
-      
+
       {/* Floating game controls at bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 shadow-lg">
         <div className="container mx-auto">

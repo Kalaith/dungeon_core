@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { useBackendGameStore } from '../../stores/backendGameStore';
+import React, { useState } from "react";
+import { useBackendGameStore } from "../../stores/backendGameStore";
 
 export const BackendMonsterPlacement: React.FC = () => {
-  const { gameState, selectedMonster, placeMonster, selectMonster } = useBackendGameStore();
+  const { gameState, selectedMonster, placeMonster, selectMonster } =
+    useBackendGameStore();
   const [floorNumber, setFloorNumber] = useState<number>(1);
   const [roomPosition, setRoomPosition] = useState<number>(1);
 
   const handlePlaceMonster = async () => {
     if (!selectedMonster) return;
 
-    const success = await placeMonster(floorNumber, roomPosition, selectedMonster);
+    const success = await placeMonster(
+      floorNumber,
+      roomPosition,
+      selectedMonster,
+    );
     if (success) {
       selectMonster(null);
       setFloorNumber(1);
@@ -22,13 +27,14 @@ export const BackendMonsterPlacement: React.FC = () => {
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-4">
       <h3 className="text-xl font-bold text-white mb-4">Place Monster</h3>
-      
+
       {selectedMonster ? (
         <div className="space-y-4">
           <div className="text-white">
-            Selected Monster: <span className="font-bold text-blue-400">{selectedMonster}</span>
+            Selected Monster:{" "}
+            <span className="font-bold text-blue-400">{selectedMonster}</span>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-white mb-2">Floor Number:</label>
@@ -56,9 +62,11 @@ export const BackendMonsterPlacement: React.FC = () => {
             <button
               onClick={handlePlaceMonster}
               disabled={!gameState.canModifyDungeon}
-              className={`px-4 py-2 rounded ${gameState.canModifyDungeon ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+              className={`px-4 py-2 rounded ${gameState.canModifyDungeon ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"}`}
             >
-              {gameState.canModifyDungeon ? 'Place Monster' : 'Close Dungeon to Build'}
+              {gameState.canModifyDungeon
+                ? "Place Monster"
+                : "Close Dungeon to Build"}
             </button>
             <button
               onClick={() => selectMonster(null)}

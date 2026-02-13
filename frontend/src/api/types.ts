@@ -15,14 +15,17 @@ export interface GameStateResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
-    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
+    speciesProgress: Record<
+      string,
+      { experience: number; unlockedTier: number }
+    >;
   };
   floors?: Array<{
     id: number;
     number: number;
     rooms: Array<{
       id: number;
-      type: 'entrance' | 'normal' | 'boss' | 'core';
+      type: "entrance" | "normal" | "boss" | "core";
       position: number;
       floorNumber: number;
       monsters: Array<{
@@ -57,7 +60,7 @@ export interface DungeonStateResponse {
     isDeepest: boolean;
     rooms: Array<{
       id: number;
-      type: 'entrance' | 'normal' | 'boss' | 'core';
+      type: "entrance" | "normal" | "boss" | "core";
       position: number;
       floorNumber: number;
       explored: boolean;
@@ -157,20 +160,23 @@ export interface GetAvailableMonstersResponse {
     baseCost: number;
     traits: string[];
   }>;
-  species?: Record<string, {
-    experience: number;
-    unlockedTier: number;
-    monsters: Array<{
-      name: string;
-      hp: number;
-      attack: number;
-      defense: number;
-      tier: number;
-      species: string;
-      baseCost: number;
-      traits: string[];
-    }>;
-  }>;
+  species?: Record<
+    string,
+    {
+      experience: number;
+      unlockedTier: number;
+      monsters: Array<{
+        name: string;
+        hp: number;
+        attack: number;
+        defense: number;
+        tier: number;
+        species: string;
+        baseCost: number;
+        traits: string[];
+      }>;
+    }
+  >;
 }
 
 export interface AddRoomRequest {
@@ -223,7 +229,10 @@ export interface InitializeGameResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
-    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
+    speciesProgress: Record<
+      string,
+      { experience: number; unlockedTier: number }
+    >;
     log: Array<{
       message: string;
       type: string;
@@ -235,7 +244,7 @@ export interface InitializeGameResponse {
     number: number;
     rooms: Array<{
       id: number;
-      type: 'entrance' | 'normal' | 'boss' | 'core';
+      type: "entrance" | "normal" | "boss" | "core";
       position: number;
       floorNumber: number;
       monsters: Array<{

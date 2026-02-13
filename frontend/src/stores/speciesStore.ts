@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface SpeciesState {
   unlockedSpecies: string[];
@@ -8,7 +8,11 @@ interface SpeciesState {
   lastUpdated: number;
 
   // Actions
-  setSpeciesData: (species: string[], experience: Record<string, number>, progress?: Record<string, { experience: number; unlockedTier: number }>) => void;
+  setSpeciesData: (
+    species: string[],
+    experience: Record<string, number>,
+    progress?: Record<string, { experience: number; unlockedTier: number }>,
+  ) => void;
   addUnlockedSpecies: (species: string) => void;
   shouldUpdate: (gameStateTimestamp: number) => boolean;
 }
@@ -21,12 +25,16 @@ export const useSpeciesStore = create<SpeciesState>()(
       speciesProgress: {},
       lastUpdated: 0,
 
-      setSpeciesData: (species: string[], experience: Record<string, number>, progress?: Record<string, { experience: number; unlockedTier: number }>) => {
+      setSpeciesData: (
+        species: string[],
+        experience: Record<string, number>,
+        progress?: Record<string, { experience: number; unlockedTier: number }>,
+      ) => {
         set({
           unlockedSpecies: species,
           speciesExperience: experience,
           speciesProgress: progress ?? {},
-          lastUpdated: Date.now()
+          lastUpdated: Date.now(),
         });
       },
 
@@ -37,9 +45,12 @@ export const useSpeciesStore = create<SpeciesState>()(
             unlockedSpecies: [...current.unlockedSpecies, species],
             speciesProgress: {
               ...current.speciesProgress,
-              [species]: current.speciesProgress[species] ?? { experience: 0, unlockedTier: 1 }
+              [species]: current.speciesProgress[species] ?? {
+                experience: 0,
+                unlockedTier: 1,
+              },
             },
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
           });
         }
       },
@@ -47,11 +58,11 @@ export const useSpeciesStore = create<SpeciesState>()(
       shouldUpdate: (gameStateTimestamp: number) => {
         const { lastUpdated } = get();
         return gameStateTimestamp > lastUpdated;
-      }
+      },
     }),
     {
-      name: 'species-store',
-      version: 1
-    }
-  )
+      name: "species-store",
+      version: 1,
+    },
+  ),
 );

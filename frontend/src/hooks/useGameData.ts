@@ -1,11 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getMonsterTypes, 
-  fetchGameConstantsData, 
-  fetchMonsterList, 
-  fetchMonsterSpeciesList 
-} from '../api/gameApi';
-import type { MonsterType, GameConstants, MonsterList, MonsterSpeciesList } from '../types/game';
+import { useState, useEffect, useCallback } from "react";
+import {
+  getMonsterTypes,
+  fetchGameConstantsData,
+  fetchMonsterList,
+  fetchMonsterSpeciesList,
+} from "../api/gameApi";
+import type {
+  MonsterType,
+  GameConstants,
+  MonsterList,
+  MonsterSpeciesList,
+} from "../types/game";
 
 interface GameData {
   monsterTypes: { [key: string]: MonsterType };
@@ -29,23 +34,26 @@ export const useGameData = (): UseGameDataReturn => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const [monsterTypes, gameConstants, monsterList, monsterSpecies] = await Promise.all([
-        getMonsterTypes(),
-        fetchGameConstantsData(),
-        fetchMonsterList(),
-        fetchMonsterSpeciesList()
-      ]);
+      const [monsterTypes, gameConstants, monsterList, monsterSpecies] =
+        await Promise.all([
+          getMonsterTypes(),
+          fetchGameConstantsData(),
+          fetchMonsterList(),
+          fetchMonsterSpeciesList(),
+        ]);
 
       setData({
         monsterTypes,
         gameConstants: gameConstants || undefined,
-        monsterList: (monsterList as unknown) as MonsterList | undefined,
-        monsterSpecies: (monsterSpecies as unknown) as MonsterSpeciesList | undefined
+        monsterList: monsterList as unknown as MonsterList | undefined,
+        monsterSpecies: monsterSpecies as unknown as
+          | MonsterSpeciesList
+          | undefined,
       });
     } catch (err) {
-      console.error('Error loading game data:', err);
+      console.error("Error loading game data:", err);
       setError(err as Error);
     } finally {
       setLoading(false);
@@ -60,19 +68,21 @@ export const useGameData = (): UseGameDataReturn => {
     data,
     loading,
     error,
-    refetch: fetchData
+    refetch: fetchData,
   };
 };
 
 // Hook for specific data types with caching
 export const useMonsterTypes = () => {
-  const [monsterTypes, setMonsterTypes] = useState<{ [key: string]: MonsterType }>({});
+  const [monsterTypes, setMonsterTypes] = useState<{
+    [key: string]: MonsterType;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    
+
     const loadMonsterTypes = async () => {
       try {
         const types = await getMonsterTypes();
@@ -89,7 +99,7 @@ export const useMonsterTypes = () => {
     };
 
     loadMonsterTypes();
-    
+
     return () => {
       mounted = false;
     };

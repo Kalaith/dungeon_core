@@ -4,8 +4,20 @@ import { useBackendGameStore } from "../../stores/backendGameStore";
 import { fetchGameConstantsData } from "../../api/gameApi";
 
 export const GameControls: React.FC = () => {
-  const { speed, status, setSpeed, setStatus, advanceTime, respawnMonsters, adventurerParties } = useGameStore();
-  const { resetGame: resetBackendGame, updateStatus, gameState: backendGameState } = useBackendGameStore();
+  const {
+    speed,
+    status,
+    setSpeed,
+    setStatus,
+    advanceTime,
+    respawnMonsters,
+    adventurerParties,
+  } = useGameStore();
+  const {
+    resetGame: resetBackendGame,
+    updateStatus,
+    gameState: backendGameState,
+  } = useBackendGameStore();
   const timeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-advance time
@@ -38,11 +50,11 @@ export const GameControls: React.FC = () => {
   const handleToggleDungeon = async () => {
     const currentStatus = backendGameState?.status || status;
 
-    if (currentStatus === 'Maintenance') {
+    if (currentStatus === "Maintenance") {
       return;
     }
 
-    const targetStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
+    const targetStatus = currentStatus === "Open" ? "Closed" : "Open";
     setStatus(targetStatus as typeof status);
     const success = await updateStatus(targetStatus);
     if (!success) {
@@ -56,7 +68,11 @@ export const GameControls: React.FC = () => {
   };
 
   const handleResetGame = async () => {
-    if (window.confirm('Are you sure you want to reset the game? This will delete all progress and cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to reset the game? This will delete all progress and cannot be undone.",
+      )
+    ) {
       await resetBackendGame();
       // No need to reload the page - the backend reset handles everything
     }
@@ -64,63 +80,73 @@ export const GameControls: React.FC = () => {
 
   const getSpeedButtonColor = () => {
     switch (speed) {
-      case 1: return 'bg-green-500 hover:bg-green-600';
-      case 2: return 'bg-yellow-500 hover:bg-yellow-600';
-      case 4: return 'bg-red-500 hover:bg-red-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
+      case 1:
+        return "bg-green-500 hover:bg-green-600";
+      case 2:
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case 4:
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
     }
   };
 
   const displayStatus = backendGameState?.status || status;
 
-  const activeBackendParties = backendGameState?.activeAdventurerParties ?? adventurerParties.length;
+  const activeBackendParties =
+    backendGameState?.activeAdventurerParties ?? adventurerParties.length;
 
   return (
     <div className="game-controls flex flex-wrap gap-4 justify-center items-center">
-      <button 
+      <button
         className={`btn px-4 py-2 rounded text-white transition-colors ${getSpeedButtonColor()}`}
-        onClick={handleToggleSpeed} 
+        onClick={handleToggleSpeed}
         id="speed-toggle"
         title="Change game speed"
       >
         {speed}x Speed
       </button>
-        <button 
+      <button
         className={`btn px-4 py-2 rounded text-white transition-colors ${
-          displayStatus === 'Open'
-            ? 'bg-red-500 hover:bg-red-600'
-            : displayStatus === 'Closed'
-              ? 'bg-green-500 hover:bg-green-600'
-              : displayStatus === 'Closing'
-                ? 'bg-orange-500 hover:bg-orange-600'
-                : 'bg-gray-400 cursor-not-allowed'
+          displayStatus === "Open"
+            ? "bg-red-500 hover:bg-red-600"
+            : displayStatus === "Closed"
+              ? "bg-green-500 hover:bg-green-600"
+              : displayStatus === "Closing"
+                ? "bg-orange-500 hover:bg-orange-600"
+                : "bg-gray-400 cursor-not-allowed"
         }`}
         onClick={handleToggleDungeon}
-        disabled={displayStatus === 'Maintenance'}
+        disabled={displayStatus === "Maintenance"}
         title={
-          displayStatus === 'Maintenance'
-            ? 'Cannot control during maintenance'
-            : displayStatus === 'Closing'
-              ? 'Dungeon is closing - waiting for adventurers to finish'
-              : 'Toggle dungeon open/closed'
+          displayStatus === "Maintenance"
+            ? "Cannot control during maintenance"
+            : displayStatus === "Closing"
+              ? "Dungeon is closing - waiting for adventurers to finish"
+              : "Toggle dungeon open/closed"
         }
       >
-        {displayStatus === 'Open'
-          ? 'Close Dungeon'
-          : displayStatus === 'Closed'
-            ? 'Open Dungeon'
-            : displayStatus === 'Closing'
-              ? 'Closing...'
-              : 'Maintenance'}
-      </button><button
+        {displayStatus === "Open"
+          ? "Close Dungeon"
+          : displayStatus === "Closed"
+            ? "Open Dungeon"
+            : displayStatus === "Closing"
+              ? "Closing..."
+              : "Maintenance"}
+      </button>
+      <button
         className={`btn px-4 py-2 rounded text-white transition-colors ${
-          adventurerParties.length === 0 
-            ? 'bg-purple-500 hover:bg-purple-600' 
-            : 'bg-gray-400 cursor-not-allowed'
+          adventurerParties.length === 0
+            ? "bg-purple-500 hover:bg-purple-600"
+            : "bg-gray-400 cursor-not-allowed"
         }`}
         onClick={handleForceRespawn}
         disabled={adventurerParties.length > 0}
-        title={adventurerParties.length > 0 ? 'Cannot respawn while adventurers are present' : 'Force respawn all monsters'}
+        title={
+          adventurerParties.length > 0
+            ? "Cannot respawn while adventurers are present"
+            : "Force respawn all monsters"
+        }
       >
         Respawn Monsters
       </button>

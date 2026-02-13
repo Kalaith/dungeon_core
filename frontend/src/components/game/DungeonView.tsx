@@ -1,22 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { useBackendGameStore } from "../../stores/backendGameStore";
-import type { DungeonFloor, Room, MonsterType, GameConstants } from "../../types/game";
-import { fetchGameConstantsData, getMonsterTypes, getScaledMonsterStats, getDungeonState } from "../../api/gameApi";
+import type {
+  DungeonFloor,
+  Room,
+  MonsterType,
+  GameConstants,
+} from "../../types/game";
+import {
+  fetchGameConstantsData,
+  getMonsterTypes,
+  getScaledMonsterStats,
+  getDungeonState,
+} from "../../api/gameApi";
 
 interface DungeonFloorViewProps {
   floor: DungeonFloor;
   onRoomClick: (floorNumber: number, roomPosition: number) => void;
 }
 
-const RoomComponent: React.FC<{ 
-  room: Room; 
+const RoomComponent: React.FC<{
+  room: Room;
   onClick: () => void;
   isActive: boolean;
   floor: DungeonFloor;
 }> = ({ room, onClick, isActive, floor }) => {
-  const [monsterTypes, setMonsterTypes] = useState<{ [key: string]: MonsterType }>({});
-  
+  const [monsterTypes, setMonsterTypes] = useState<{
+    [key: string]: MonsterType;
+  }>({});
+
   useEffect(() => {
     const loadMonsterTypes = async () => {
       const types = await getMonsterTypes();
@@ -27,188 +39,224 @@ const RoomComponent: React.FC<{
 
   // Calculate the proper room number (excluding entrance)
   const getRoomNumber = () => {
-    if (room.type === 'entrance') return 'Entrance';
-    if (room.type === 'core') return 'Core';
-    
+    if (room.type === "entrance") return "Entrance";
+    if (room.type === "core") return "Core";
+
     // For normal/boss rooms, calculate the room number by counting non-entrance rooms before this one
-    const roomsBeforeThis = floor.rooms
-      .filter(r => r.type !== 'entrance' && r.type !== 'core' && r.position < room.position)
-      .length;
-    
+    const roomsBeforeThis = floor.rooms.filter(
+      (r) =>
+        r.type !== "entrance" &&
+        r.type !== "core" &&
+        r.position < room.position,
+    ).length;
+
     return `Room ${roomsBeforeThis + 1}`;
-  };  const getRoomColor = () => {
+  };
+  const getRoomColor = () => {
     const baseColor = (() => {
       switch (room.type) {
-        case 'entrance': return '#4CAF50';
-        case 'normal': return '#9E9E9E';
-        case 'boss': return '#F44336';
-        case 'core': return '#9C27B0';
-        default: return '#9E9E9E';
+        case "entrance":
+          return "#4CAF50";
+        case "normal":
+          return "#9E9E9E";
+        case "boss":
+          return "#F44336";
+        case "core":
+          return "#9C27B0";
+        default:
+          return "#9E9E9E";
       }
     })();
 
     // Modify color based on monster status
     if (room.monsters.length > 0) {
-      const aliveMonsters = room.monsters.filter(m => m.alive).length;
-      const deadMonsters = room.monsters.filter(m => !m.alive).length;
-      
+      const aliveMonsters = room.monsters.filter((m) => m.alive).length;
+      const deadMonsters = room.monsters.filter((m) => !m.alive).length;
+
       if (deadMonsters > 0 && aliveMonsters === 0) {
         // All monsters dead - darker/desaturated
-        return baseColor + '80'; // Add transparency
+        return baseColor + "80"; // Add transparency
       } else if (deadMonsters > 0) {
         // Some monsters dead - slightly darker
-        return baseColor + 'CC'; // Slightly transparent
+        return baseColor + "CC"; // Slightly transparent
       }
     }
-    
+
     return baseColor;
   };
 
   const getRoomIcon = () => {
     switch (room.type) {
-      case 'entrance': return '🚪';
-      case 'normal': return '⚔️';
-      case 'boss': return '👑';
-      case 'core': return '💎';
-      default: return '❓';
+      case "entrance":
+        return "🚪";
+      case "normal":
+        return "⚔️";
+      case "boss":
+        return "👑";
+      case "core":
+        return "💎";
+      default:
+        return "❓";
     }
   };
 
-  const adventurersHere = useGameStore.getState().adventurerParties.filter(
-    party => party.currentFloor === room.floorNumber && party.currentRoom === room.position
-  );
+  const adventurersHere = useGameStore
+    .getState()
+    .adventurerParties.filter(
+      (party) =>
+        party.currentFloor === room.floorNumber &&
+        party.currentRoom === room.position,
+    );
 
   return (
     <div
       className={`room-container relative p-4 border-2 rounded-lg cursor-pointer transition-all min-h-[120px] min-w-[100px] ${
-        isActive ? 'ring-2 ring-blue-400' : ''
+        isActive ? "ring-2 ring-blue-400" : ""
       }`}
-      style={{ 
+      style={{
         backgroundColor: getRoomColor(),
-        borderColor: isActive ? '#3B82F6' : '#D1D5DB',
-        opacity: room.explored ? 1 : 0.8
+        borderColor: isActive ? "#3B82F6" : "#D1D5DB",
+        opacity: room.explored ? 1 : 0.8,
       }}
       onClick={onClick}
     >
       <div className="room-header text-center mb-2">
         <div className="text-2xl">{getRoomIcon()}</div>
-        <div className="text-xs font-bold text-white">
-          {getRoomNumber()}
-        </div>
+        <div className="text-xs font-bold text-white">{getRoomNumber()}</div>
       </div>
-
       {/* Monsters */}
       {room.monsters.length > 0 && (
-        <div className="monsters-container flex flex-wrap gap-1 justify-center mb-2">          {room.monsters.slice(0, 3).map((monster) => {
-            const monsterType = monsterTypes[monster.type] || { 
-              color: "#gray", 
+        <div className="monsters-container flex flex-wrap gap-1 justify-center mb-2">
+          {" "}
+          {room.monsters.slice(0, 3).map((monster) => {
+            const monsterType = monsterTypes[monster.type] || {
+              color: "#gray",
               name: "Unknown",
               hp: 20,
               attack: 5,
-              defense: 2
+              defense: 2,
             };
             const scaledStats = getScaledMonsterStats(
-              { hp: monsterType.hp || 20, attack: monsterType.attack || 5, defense: monsterType.defense || 2 },
+              {
+                hp: monsterType.hp || 20,
+                attack: monsterType.attack || 5,
+                defense: monsterType.defense || 2,
+              },
               monster.floorNumber,
-              monster.isBoss
+              monster.isBoss,
             );
-              const getMonsterEmoji = () => {
+            const getMonsterEmoji = () => {
               if (!monster.alive) {
-                return '💀'; // Skull for dead monsters
+                return "💀"; // Skull for dead monsters
               }
               // Use different emojis based on monster type
               const emojiMap: Record<string, string> = {
-                'Goblin': '👹',
-                'Orc': '🧌',
-                'Skeleton': '💀',
-                'Dragon': '🐉',
-                'Troll': '🧌',
-                'Demon': '😈',
-                'Golem': '🗿',
-                'Vampire': '🧛',
-                'Werewolf': '🐺',
-                'Lich': '☠️'
+                Goblin: "👹",
+                Orc: "🧌",
+                Skeleton: "💀",
+                Dragon: "🐉",
+                Troll: "🧌",
+                Demon: "😈",
+                Golem: "🗿",
+                Vampire: "🧛",
+                Werewolf: "🐺",
+                Lich: "☠️",
               };
-              return emojiMap[monsterType.name] || '🐲'; // Fallback to dragon
+              return emojiMap[monsterType.name] || "🐲"; // Fallback to dragon
             };
-            
+
             const getMonsterStyle = () => {
               if (!monster.alive) {
-                return { 
-                  color: '#666666', // Gray color for dead monsters
-                  filter: 'grayscale(100%)'
+                return {
+                  color: "#666666", // Gray color for dead monsters
+                  filter: "grayscale(100%)",
                 };
               }
               return { color: monsterType.color };
             };
-            
+
             return (
               <div
                 key={monster.id}
                 className={`monster-icon relative text-lg transition-all duration-300 ${
-                  monster.alive 
-                    ? 'hover:scale-110' 
-                    : 'opacity-75 cursor-help'
+                  monster.alive ? "hover:scale-110" : "opacity-75 cursor-help"
                 }`}
-                title={`${monsterType.name} ${monster.isBoss ? '(Boss)' : ''} - ${
-                  monster.alive 
-                    ? `HP: ${monster.hp}/${scaledStats.hp}` 
-                    : 'DEAD - Will respawn when all adventurers leave'
+                title={`${monsterType.name} ${monster.isBoss ? "(Boss)" : ""} - ${
+                  monster.alive
+                    ? `HP: ${monster.hp}/${scaledStats.hp}`
+                    : "DEAD - Will respawn when all adventurers leave"
                 }`}
                 style={getMonsterStyle()}
               >
                 {getMonsterEmoji()}
                 {monster.isBoss && (
-                  <div className={`absolute -top-1 -right-1 text-xs ${monster.alive ? '' : 'opacity-50'}`}>
+                  <div
+                    className={`absolute -top-1 -right-1 text-xs ${monster.alive ? "" : "opacity-50"}`}
+                  >
                     👑
                   </div>
                 )}
                 {!monster.alive && (
-                  <div className="absolute -bottom-1 -right-1 text-xs" title="Dead">
+                  <div
+                    className="absolute -bottom-1 -right-1 text-xs"
+                    title="Dead"
+                  >
                     ⚰️
                   </div>
                 )}
               </div>
             );
-          })}          {room.monsters.length > 3 && (
+          })}{" "}
+          {room.monsters.length > 3 && (
             <div className="text-xs text-white">
               +{room.monsters.length - 3}
-              {room.monsters.filter(m => !m.alive).length > 0 && (
-                <span className="ml-1 opacity-75" title="Some monsters are dead">💀</span>
+              {room.monsters.filter((m) => !m.alive).length > 0 && (
+                <span
+                  className="ml-1 opacity-75"
+                  title="Some monsters are dead"
+                >
+                  💀
+                </span>
               )}
             </div>
           )}
         </div>
       )}
-
       {/* Adventurers */}
       {adventurersHere.length > 0 && (
         <div className="adventurers-container flex gap-1 justify-center mb-1">
           {adventurersHere.map((party) => (
-            <div key={party.id} className="text-sm" title={`Party ${party.id} (${party.members.filter(m => m.alive).length} alive)`}>
+            <div
+              key={party.id}
+              className="text-sm"
+              title={`Party ${party.id} (${party.members.filter((m) => m.alive).length} alive)`}
+            >
               🧑‍🎤
             </div>
           ))}
         </div>
       )}
-
       {/* Room upgrade indicator */}
       {room.roomUpgrade && (
         <div className="absolute top-1 right-1 text-xs">⚡</div>
-      )}      {/* Loot indicator */}
+      )}{" "}
+      {/* Loot indicator */}
       {room.loot > 0 && (
         <div className="absolute bottom-1 right-1 text-xs">💰</div>
       )}
-
       {/* Monster status indicator */}
       {room.monsters.length > 0 && (
         <div className="absolute top-1 left-1 text-xs">
           <div className="flex items-center gap-1 bg-black bg-opacity-50 rounded px-1">
-            <span className="text-green-400">{room.monsters.filter(m => m.alive).length}</span>
-            {room.monsters.filter(m => !m.alive).length > 0 && (
+            <span className="text-green-400">
+              {room.monsters.filter((m) => m.alive).length}
+            </span>
+            {room.monsters.filter((m) => !m.alive).length > 0 && (
               <>
                 <span className="text-gray-400">/</span>
-                <span className="text-red-400">{room.monsters.filter(m => !m.alive).length}💀</span>
+                <span className="text-red-400">
+                  {room.monsters.filter((m) => !m.alive).length}💀
+                </span>
               </>
             )}
           </div>
@@ -218,8 +266,13 @@ const RoomComponent: React.FC<{
   );
 };
 
-export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({ floor, onRoomClick }) => {
-  const [gameConstants, setGameConstants] = useState<GameConstants | null>(null);
+export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({
+  floor,
+  onRoomClick,
+}) => {
+  const [gameConstants, setGameConstants] = useState<GameConstants | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchConstants = async () => {
@@ -236,10 +289,11 @@ export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({ floor, onRoo
       <div className="floor-header text-center mb-4">
         <h3 className="text-xl font-bold text-white">
           Floor {floor.number}
-          {floor.isDeepest && <span className="text-purple-400 ml-2">(Deepest)</span>}
+          {floor.isDeepest && (
+            <span className="text-purple-400 ml-2">(Deepest)</span>
+          )}
         </h3>
       </div>
-
       <div className="rooms-container flex items-center justify-center gap-2 overflow-x-auto">
         {floor.rooms
           .sort((a, b) => a.position - b.position)
@@ -256,14 +310,26 @@ export const DungeonFloorView: React.FC<DungeonFloorViewProps> = ({ floor, onRoo
               )}
             </React.Fragment>
           ))}
-      </div>      <div className="floor-stats text-center mt-2 text-sm text-gray-400">
+      </div>{" "}
+      <div className="floor-stats text-center mt-2 text-sm text-gray-400">
         <div>
           Rooms: {floor.rooms.length}/{gameConstants.MAX_ROOMS_PER_FLOOR + 1}
           {floor.isDeepest && <span className="ml-4">🔮 Core Room Active</span>}
         </div>
         <div className="mt-1">
-          Monsters: {floor.rooms.reduce((total, room) => total + room.monsters.filter(m => m.alive).length, 0)} alive, {' '}
-          {floor.rooms.reduce((total, room) => total + room.monsters.filter(m => !m.alive).length, 0)} dead
+          Monsters:{" "}
+          {floor.rooms.reduce(
+            (total, room) =>
+              total + room.monsters.filter((m) => m.alive).length,
+            0,
+          )}{" "}
+          alive,{" "}
+          {floor.rooms.reduce(
+            (total, room) =>
+              total + room.monsters.filter((m) => !m.alive).length,
+            0,
+          )}{" "}
+          dead
         </div>
       </div>
     </div>
@@ -276,32 +342,46 @@ export const DungeonView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Get monster placement functions from store
-  const { selectedMonster, selectMonster, placeMonster, gameState } = useBackendGameStore();
+  const { selectedMonster, selectMonster, placeMonster, gameState } =
+    useBackendGameStore();
 
   // Handle room clicks internally
-  const handleRoomClick = async (floorNumber: number, roomPosition: number): Promise<void> => {
+  const handleRoomClick = async (
+    floorNumber: number,
+    roomPosition: number,
+  ): Promise<void> => {
     if (selectedMonster !== null) {
       if (!gameState?.canModifyDungeon) {
-        setError('You must close the dungeon and wait for adventurers to leave before building.');
+        setError(
+          "You must close the dungeon and wait for adventurers to leave before building.",
+        );
         return;
       }
       try {
-        console.log(`Attempting to place ${selectedMonster} on floor ${floorNumber} position ${roomPosition}`);
+        console.log(
+          `Attempting to place ${selectedMonster} on floor ${floorNumber} position ${roomPosition}`,
+        );
 
-        const success = await placeMonster(floorNumber, roomPosition, selectedMonster);
+        const success = await placeMonster(
+          floorNumber,
+          roomPosition,
+          selectedMonster,
+        );
         if (success) {
-          console.log('Monster placed successfully!');
+          console.log("Monster placed successfully!");
           selectMonster(null); // Clear selection after successful placement
           // Immediately refresh to show the new monster
           loadFloors();
         } else {
-          console.error('Failed to place monster');
+          console.error("Failed to place monster");
         }
       } catch (error) {
-        console.error('Error placing monster:', error);
+        console.error("Error placing monster:", error);
       }
     } else {
-      console.log(`Clicked room at floor ${floorNumber}, position ${roomPosition} - no monster selected`);
+      console.log(
+        `Clicked room at floor ${floorNumber}, position ${roomPosition} - no monster selected`,
+      );
       setError(null);
     }
   };
@@ -312,28 +392,30 @@ export const DungeonView: React.FC = () => {
       const dungeonData = await getDungeonState();
       if (dungeonData && dungeonData.floors) {
         // Transform API data to match frontend types
-        const transformedFloors: DungeonFloor[] = dungeonData.floors.map(floor => ({
-          ...floor,
-          rooms: floor.rooms.map(room => ({
-            ...room,
-            monsters: room.monsters.map(monster => ({
-              ...monster,
-              floorNumber: room.floorNumber,
-              scaledStats: {
-                hp: monster.maxHp,
-                attack: 5,
-                defense: 2
-              }
-            }))
-          }))
-        }));
+        const transformedFloors: DungeonFloor[] = dungeonData.floors.map(
+          (floor) => ({
+            ...floor,
+            rooms: floor.rooms.map((room) => ({
+              ...room,
+              monsters: room.monsters.map((monster) => ({
+                ...monster,
+                floorNumber: room.floorNumber,
+                scaledStats: {
+                  hp: monster.maxHp,
+                  attack: 5,
+                  defense: 2,
+                },
+              })),
+            })),
+          }),
+        );
 
         setFloors(transformedFloors);
         setError(null); // Clear any previous errors
       }
     } catch (err) {
-      console.error('Failed to load floors:', err);
-      setError('Failed to load dungeon data');
+      console.error("Failed to load floors:", err);
+      setError("Failed to load dungeon data");
     }
   };
 

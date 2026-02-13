@@ -17,21 +17,41 @@ export const DungeonGrid: React.FC<DungeonGridProps> = ({ onRoomClick }) => {
 
   const getRoomTypeDisplay = (room: Room) => {
     switch (room.type) {
-      case 'entrance':
-        return { symbol: 'E', color: 'bg-green-200 border-green-400', title: 'Entrance' };
-      case 'core':
-        return { symbol: 'C', color: 'bg-purple-200 border-purple-400', title: 'Core Room' };
-      case 'boss':
-        return { symbol: 'B', color: 'bg-red-200 border-red-400', title: 'Boss Room' };
+      case "entrance":
+        return {
+          symbol: "E",
+          color: "bg-green-200 border-green-400",
+          title: "Entrance",
+        };
+      case "core":
+        return {
+          symbol: "C",
+          color: "bg-purple-200 border-purple-400",
+          title: "Core Room",
+        };
+      case "boss":
+        return {
+          symbol: "B",
+          color: "bg-red-200 border-red-400",
+          title: "Boss Room",
+        };
       default:
-        return { symbol: 'R', color: 'bg-blue-200 border-blue-400', title: 'Normal Room' };
+        return {
+          symbol: "R",
+          color: "bg-blue-200 border-blue-400",
+          title: "Normal Room",
+        };
     }
   };
 
   const getAdventurersInRoom = (floorNumber: number, roomPosition: number) => {
     return adventurerParties
-      .filter(party => party.currentFloor === floorNumber && party.currentRoom === roomPosition)
-      .flatMap(party => party.members.filter(member => member.alive));
+      .filter(
+        (party) =>
+          party.currentFloor === floorNumber &&
+          party.currentRoom === roomPosition,
+      )
+      .flatMap((party) => party.members.filter((member) => member.alive));
   };
 
   return (
@@ -40,12 +60,12 @@ export const DungeonGrid: React.FC<DungeonGridProps> = ({ onRoomClick }) => {
         {floors.map((floor) => (
           <div key={floor.id} className="border rounded-lg p-4 bg-gray-50">
             <h3 className="text-lg font-bold mb-3 text-center">
-              Floor {floor.number} {floor.isDeepest && '(Deepest)'}
+              Floor {floor.number} {floor.isDeepest && "(Deepest)"}
             </h3>
             <div className="flex justify-center">
               <div className="grid grid-cols-6 gap-2 max-w-4xl">
                 {Array.from({ length: 6 }, (_, pos) => {
-                  const room = floor.rooms.find(r => r.position === pos);
+                  const room = floor.rooms.find((r) => r.position === pos);
                   if (!room) {
                     return (
                       <div
@@ -60,13 +80,16 @@ export const DungeonGrid: React.FC<DungeonGridProps> = ({ onRoomClick }) => {
                   }
 
                   const roomDisplay = getRoomTypeDisplay(room);
-                  const adventurersHere = getAdventurersInRoom(floor.number, pos);
+                  const adventurersHere = getAdventurersInRoom(
+                    floor.number,
+                    pos,
+                  );
                   const isSelected = selectedRoom === room.id;
 
                   return (
                     <div
                       key={room.id}
-                      className={`relative w-20 h-20 border-2 rounded flex flex-col items-center justify-center cursor-pointer hover:opacity-80 ${roomDisplay.color} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                      className={`relative w-20 h-20 border-2 rounded flex flex-col items-center justify-center cursor-pointer hover:opacity-80 ${roomDisplay.color} ${isSelected ? "ring-2 ring-blue-500" : ""}`}
                       onClick={() => handleRoomClick(floor.number, pos)}
                       title={roomDisplay.title}
                     >
@@ -77,10 +100,13 @@ export const DungeonGrid: React.FC<DungeonGridProps> = ({ onRoomClick }) => {
 
                       {/* Monsters */}
                       {room.monsters.length > 0 && (
-                        <div className="text-xs flex flex-wrap justify-center" title={`${room.monsters.length} monsters`}>
+                        <div
+                          className="text-xs flex flex-wrap justify-center"
+                          title={`${room.monsters.length} monsters`}
+                        >
                           {room.monsters.slice(0, 2).map((monster) => (
-                            <span 
-                              key={monster.id} 
+                            <span
+                              key={monster.id}
                               style={{ color: "gray" }}
                               className={monster.alive ? "" : "opacity-50"}
                             >
@@ -88,38 +114,48 @@ export const DungeonGrid: React.FC<DungeonGridProps> = ({ onRoomClick }) => {
                             </span>
                           ))}
                           {room.monsters.length > 2 && (
-                            <span className="text-red-600 font-bold text-xs">+{room.monsters.length - 2}</span>
+                            <span className="text-red-600 font-bold text-xs">
+                              +{room.monsters.length - 2}
+                            </span>
                           )}
                         </div>
                       )}
 
                       {/* Adventurers */}
                       {adventurersHere.length > 0 && (
-                        <div className="text-xs flex flex-wrap justify-center mt-1" title={`${adventurersHere.length} adventurers`}>
+                        <div
+                          className="text-xs flex flex-wrap justify-center mt-1"
+                          title={`${adventurersHere.length} adventurers`}
+                        >
                           {adventurersHere.slice(0, 2).map((adventurer) => (
-                            <span 
-                              key={adventurer.id} 
-                              style={{ color: "blue" }}
-                            >
+                            <span key={adventurer.id} style={{ color: "blue" }}>
                               🧑‍🎤
                             </span>
                           ))}
                           {adventurersHere.length > 2 && (
-                            <span className="text-blue-600 font-bold text-xs">+{adventurersHere.length - 2}</span>
+                            <span className="text-blue-600 font-bold text-xs">
+                              +{adventurersHere.length - 2}
+                            </span>
                           )}
                         </div>
                       )}
 
                       {/* Loot */}
                       {room.loot > 0 && (
-                        <span className="absolute top-1 right-1 text-yellow-500 text-xs" title={`${room.loot} gold`}>
+                        <span
+                          className="absolute top-1 right-1 text-yellow-500 text-xs"
+                          title={`${room.loot} gold`}
+                        >
                           💰
                         </span>
                       )}
 
                       {/* Room upgrade indicator */}
                       {room.roomUpgrade && (
-                        <span className="absolute bottom-1 right-1 text-xs" title={room.roomUpgrade.name}>
+                        <span
+                          className="absolute bottom-1 right-1 text-xs"
+                          title={room.roomUpgrade.name}
+                        >
                           ⚡
                         </span>
                       )}
