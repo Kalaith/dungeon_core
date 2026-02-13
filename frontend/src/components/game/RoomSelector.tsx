@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useBackendGameStore } from "../../stores/backendGameStore";
 import {
@@ -237,11 +236,9 @@ export const RoomSelector: React.FC = () => {
 
       <div className="mt-4 p-2 bg-gray-700 rounded text-xs text-gray-300">
         💡 Add rooms to expand your dungeon. When a floor reaches{" "}
-        {(gameConstants?.MAX_ROOMS_PER_FLOOR ?? 0) + 1} rooms, the next room will start
-        a new floor.
+        {(gameConstants?.MAX_ROOMS_PER_FLOOR ?? 0) + 1} rooms, the next room
+        will start a new floor.
       </div>
     </div>
   );
 };
-
-

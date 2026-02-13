@@ -1,4 +1,3 @@
-
 import type {
   MonsterType,
   GameConstants,
@@ -89,7 +88,8 @@ export const updateDungeonStatus = async (status: string) => {
 // Game constants from backend (cached)
 export const fetchGameConstantsData = async () => {
   if (gameConstantsCache === null) {
-    gameConstantsCache = (await apiClient.getGameConstants() ) as unknown as GameConstants;
+    gameConstantsCache =
+      (await apiClient.getGameConstants()) as unknown as GameConstants;
   }
   return gameConstantsCache;
 };
@@ -135,7 +135,8 @@ export const fetchMonsterTraits = async () => {
 
 export const fetchEquipmentData = async () => {
   if (equipmentDataCache === null) {
-    equipmentDataCache = (await apiClient.getEquipmentData() ) as unknown as EquipmentData;
+    equipmentDataCache =
+      (await apiClient.getEquipmentData()) as unknown as EquipmentData;
   }
   return equipmentDataCache!;
 };
@@ -209,4 +210,3 @@ export const getRoomCost = (
 
   return Math.max(5, Math.round(totalCost / 5) * 5);
 };
-
