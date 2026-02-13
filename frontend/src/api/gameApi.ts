@@ -1,3 +1,4 @@
+
 import type {
   MonsterType,
   GameConstants,
@@ -88,7 +89,7 @@ export const updateDungeonStatus = async (status: string) => {
 // Game constants from backend (cached)
 export const fetchGameConstantsData = async () => {
   if (gameConstantsCache === null) {
-    gameConstantsCache = await apiClient.getGameConstants();
+    gameConstantsCache = (await apiClient.getGameConstants() ) as unknown as GameConstants;
   }
   return gameConstantsCache;
 };
@@ -96,14 +97,18 @@ export const fetchGameConstantsData = async () => {
 // Monster data from backend (cached)
 export const fetchMonsterList = async () => {
   if (monsterTypesCache === null) {
-    monsterTypesCache = await apiClient.getMonsterTypes();
+    monsterTypesCache = (await apiClient.getMonsterTypes()) as {
+      [key: string]: MonsterType;
+    };
   }
   return monsterTypesCache;
 };
 
 export const fetchMonsterSpeciesList = async () => {
   if (monsterTypesCache === null) {
-    monsterTypesCache = await apiClient.getMonsterTypes();
+    monsterTypesCache = (await apiClient.getMonsterTypes()) as {
+      [key: string]: MonsterType;
+    };
   }
   return monsterTypesCache;
 };
@@ -112,35 +117,45 @@ export const getMonsterTypes = async (): Promise<{
   [key: string]: MonsterType;
 }> => {
   if (monsterTypesCache === null) {
-    monsterTypesCache = await apiClient.getMonsterTypes();
+    monsterTypesCache = (await apiClient.getMonsterTypes()) as {
+      [key: string]: MonsterType;
+    };
   }
   return monsterTypesCache!;
 };
 
 export const fetchMonsterTraits = async () => {
   if (monsterTraitsCache === null) {
-    monsterTraitsCache = await apiClient.getMonsterTraits();
+    monsterTraitsCache = (await apiClient.getMonsterTraits()) as {
+      [key: string]: MonsterTrait;
+    };
   }
   return monsterTraitsCache!;
 };
 
 export const fetchEquipmentData = async () => {
   if (equipmentDataCache === null) {
-    equipmentDataCache = await apiClient.getEquipmentData();
+    equipmentDataCache = (await apiClient.getEquipmentData() ) as unknown as EquipmentData;
   }
   return equipmentDataCache!;
 };
 
 export const fetchFloorScaling = async () => {
   if (floorScalingCache === null) {
-    floorScalingCache = await apiClient.getFloorScaling();
+    floorScalingCache = (await apiClient.getFloorScaling()) as {
+      regular: FloorScaling[];
+      deep: DeepFloorScaling;
+    };
   }
   return floorScalingCache!.regular;
 };
 
 export const fetchDeepFloorScaling = async () => {
   if (floorScalingCache === null) {
-    floorScalingCache = await apiClient.getFloorScaling();
+    floorScalingCache = (await apiClient.getFloorScaling()) as {
+      regular: FloorScaling[];
+      deep: DeepFloorScaling;
+    };
   }
   return floorScalingCache!.deep;
 };
@@ -194,3 +209,4 @@ export const getRoomCost = (
 
   return Math.max(5, Math.round(totalCost / 5) * 5);
 };
+

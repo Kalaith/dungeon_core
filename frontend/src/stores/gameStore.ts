@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
@@ -117,6 +118,8 @@ export const useGameStore = create<GameStore>()(
             set({
               ...gameState,
               floors: floors as DungeonFloor[],
+              adventurerParties:
+                (gameState.adventurerParties as AdventurerParty[]) ?? [],
               isInitialized: true,
               status: gameState.status as
                 | "Open"

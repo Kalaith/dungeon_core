@@ -142,7 +142,7 @@ const RoomComponent: React.FC<{
                 attack: monsterType.attack || 5,
                 defense: monsterType.defense || 2,
               },
-              monster.floorNumber,
+              monster.floorNumber ?? room.floorNumber,
               monster.isBoss,
             );
             const getMonsterEmoji = () => {

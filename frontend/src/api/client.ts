@@ -1,3 +1,4 @@
+
 import type {
   GameStateResponse,
   DungeonStateResponse,
@@ -45,17 +46,15 @@ class ApiClient {
     }
 
     const authToken = this.getAuthToken();
-    const authHeader = authToken
-      ? { Authorization: `Bearer ${authToken}` }
-      : {};
+    const headers = new Headers(options?.headers);
+    headers.set("Content-Type", "application/json");
+    if (authToken) {
+      headers.set("Authorization", `Bearer ${authToken}`);
+    }
 
     const response = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeader,
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!isRoutineRequest) {

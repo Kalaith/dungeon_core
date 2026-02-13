@@ -63,8 +63,8 @@ export interface Monster {
   alive: boolean;
   lastRespawn?: number;
   isBoss: boolean;
-  floorNumber: number;
-  scaledStats: {
+  floorNumber?: number;
+  scaledStats?: {
     hp: number;
     attack: number;
     defense: number;
