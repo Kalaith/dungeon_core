@@ -30,17 +30,17 @@ export default tseslint.config(
         // Variables and functions: camelCase
         {
           selector: 'variableLike',
-          format: ['camelCase', 'PascalCase'], // Allow PascalCase for React components
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'], // Allow PascalCase for React components
         },
         // Parameters: allow underscore prefix for unused params
         {
           selector: 'parameter',
-          format: ['camelCase', 'PascalCase'],
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
           leadingUnderscore: 'allow',
         },
         {
           selector: 'function',
-          format: ['camelCase', 'PascalCase'], // Allow PascalCase for React components
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'], // Allow PascalCase for React components
         },
         // Types, interfaces, classes: PascalCase
         {
