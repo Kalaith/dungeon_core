@@ -1,5 +1,5 @@
-import { ErrorBoundary } from "./components/ui/ErrorBoundary";
-import { GamePage } from "./pages/GamePage";
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { GamePage } from './pages/GamePage';
 
 function App() {
   return (

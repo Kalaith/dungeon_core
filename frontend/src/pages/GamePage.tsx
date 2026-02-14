@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
-import { useBackendGameStore } from "../stores/backendGameStore";
-import { useSpeciesStore } from "../stores/speciesStore";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
-import { ResourceBar } from "../components/layout/ResourceBar";
-import { SpeciesSelectionModal } from "../components/game/SpeciesSelectionModal";
-import { MonsterSelector } from "../components/game/MonsterSelector";
-import { DungeonView } from "../components/game/DungeonView";
-import { GameControls } from "../components/game/GameControls";
-import { RoomSelector } from "../components/game/RoomSelector";
+import { useState, useEffect } from 'react';
+import { useBackendGameStore } from '../stores/backendGameStore';
+import { useSpeciesStore } from '../stores/speciesStore';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { ResourceBar } from '../components/layout/ResourceBar';
+import { SpeciesSelectionModal } from '../components/game/SpeciesSelectionModal';
+import { MonsterSelector } from '../components/game/MonsterSelector';
+import { DungeonView } from '../components/game/DungeonView';
+import { GameControls } from '../components/game/GameControls';
+import { RoomSelector } from '../components/game/RoomSelector';
 
 export function GamePage() {
-  const { gameState, loading, error, initializeGame, refreshGameState } =
-    useBackendGameStore();
+  const { gameState, loading, error, initializeGame, refreshGameState } = useBackendGameStore();
 
   const { unlockedSpecies } = useSpeciesStore();
 
@@ -32,13 +31,13 @@ export function GamePage() {
   // Auto-refresh game state every 5 seconds
   useEffect(() => {
     if (gameState) {
-      console.log("Setting up auto-refresh interval");
+      console.log('Setting up auto-refresh interval');
       const interval = setInterval(() => {
-        console.log("Auto-refreshing game state...");
+        console.log('Auto-refreshing game state...');
         refreshGameState();
       }, 5000);
       return () => {
-        console.log("Clearing auto-refresh interval");
+        console.log('Clearing auto-refresh interval');
         clearInterval(interval);
       };
     }
@@ -79,10 +78,7 @@ export function GamePage() {
       <ResourceBar gameState={gameState} />
 
       {showSpeciesModal && (
-        <SpeciesSelectionModal
-          open={showSpeciesModal}
-          onClose={handleSpeciesSelect}
-        />
+        <SpeciesSelectionModal open={showSpeciesModal} onClose={handleSpeciesSelect} />
       )}
 
       <div className="container mx-auto px-4 py-6 pb-24">
@@ -103,9 +99,7 @@ export function GamePage() {
             <MonsterSelector />
 
             <div className="bg-gray-800 p-4 rounded-lg mt-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">
-                Monsters
-              </h3>
+              <h3 className="text-lg font-semibold mb-3 text-white">Monsters</h3>
               {/* Monsters will be shown by individual room components */}
               <p className="text-gray-400 text-sm">
                 Monsters are displayed in their respective rooms

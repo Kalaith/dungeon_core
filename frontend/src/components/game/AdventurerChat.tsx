@@ -1,13 +1,11 @@
-import React from "react";
-import { useGameStore } from "../../stores/gameStore";
+import React from 'react';
+import { useGameStore } from '../../stores/gameStore';
 
 export const AdventurerChat: React.FC = () => {
   const { log } = useGameStore();
 
   const adventurerMessages = log
-    .filter(
-      (entry) => entry.type === "adventure" && entry.message.includes("says:"),
-    )
+    .filter(entry => entry.type === 'adventure' && entry.message.includes('says:'))
     .slice(-5); // Show last 5 messages
 
   return (
@@ -15,9 +13,7 @@ export const AdventurerChat: React.FC = () => {
       <h4 className="text-sm font-bold mb-2 text-gray-300">Adventurer Chat</h4>
       <div className="chat-messages space-y-1 max-h-20 overflow-y-auto">
         {adventurerMessages.length === 0 ? (
-          <div className="text-xs text-gray-500 italic">
-            No adventurer chatter yet...
-          </div>
+          <div className="text-xs text-gray-500 italic">No adventurer chatter yet...</div>
         ) : (
           adventurerMessages.map((msg, index: number) => (
             <div key={index} className="text-xs text-gray-300">

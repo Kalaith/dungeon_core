@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface SpeciesState {
   unlockedSpecies: string[];
@@ -11,7 +11,7 @@ interface SpeciesState {
   setSpeciesData: (
     species: string[],
     experience: Record<string, number>,
-    progress?: Record<string, { experience: number; unlockedTier: number }>,
+    progress?: Record<string, { experience: number; unlockedTier: number }>
   ) => void;
   addUnlockedSpecies: (species: string) => void;
   shouldUpdate: (gameStateTimestamp: number) => boolean;
@@ -28,7 +28,7 @@ export const useSpeciesStore = create<SpeciesState>()(
       setSpeciesData: (
         species: string[],
         experience: Record<string, number>,
-        progress?: Record<string, { experience: number; unlockedTier: number }>,
+        progress?: Record<string, { experience: number; unlockedTier: number }>
       ) => {
         set({
           unlockedSpecies: species,
@@ -61,8 +61,8 @@ export const useSpeciesStore = create<SpeciesState>()(
       },
     }),
     {
-      name: "species-store",
+      name: 'species-store',
       version: 1,
-    },
-  ),
+    }
+  )
 );

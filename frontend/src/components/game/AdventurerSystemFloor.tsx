@@ -1,15 +1,13 @@
-import React, { useEffect, useRef } from "react";
-import { useGameStore } from "../../stores/gameStore";
-import { fetchGameConstantsData } from "../../api/gameApi";
-import type { AdventurerParty, Adventurer } from "../../types/game";
+import React, { useEffect, useRef } from 'react';
+import { useGameStore } from '../../stores/gameStore';
+import { fetchGameConstantsData } from '../../api/gameApi';
+import type { AdventurerParty, Adventurer } from '../../types/game';
 
 interface AdventurerSystemProps {
   running: boolean;
 }
 
-export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
-  running,
-}) => {
+export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) => {
   const {
     status,
     hour,
@@ -31,48 +29,46 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
   const generateAdventurerParty = async (): Promise<AdventurerParty> => {
     const gameConstants = await fetchGameConstantsData();
     if (!gameConstants) {
-      throw new Error("Failed to load game constants");
+      throw new Error('Failed to load game constants');
     }
     const partySize =
       Math.floor(
-        Math.random() *
-          (gameConstants.MAX_PARTY_SIZE - gameConstants.MIN_PARTY_SIZE + 1),
+        Math.random() * (gameConstants.MAX_PARTY_SIZE - gameConstants.MIN_PARTY_SIZE + 1)
       ) + gameConstants.MIN_PARTY_SIZE;
 
     const adventurerClasses = [
-      { name: "Warrior", hp: 100, attack: 25, defense: 15, color: "#d4af37" },
-      { name: "Rogue", hp: 80, attack: 30, defense: 10, color: "#6b5b95" },
-      { name: "Mage", hp: 60, attack: 35, defense: 5, color: "#2e86ab" },
-      { name: "Cleric", hp: 90, attack: 20, defense: 20, color: "#f18f01" },
+      { name: 'Warrior', hp: 100, attack: 25, defense: 15, color: '#d4af37' },
+      { name: 'Rogue', hp: 80, attack: 30, defense: 10, color: '#6b5b95' },
+      { name: 'Mage', hp: 60, attack: 35, defense: 5, color: '#2e86ab' },
+      { name: 'Cleric', hp: 90, attack: 20, defense: 20, color: '#f18f01' },
     ];
 
     const names = [
-      "Aiden",
-      "Bella",
-      "Cora",
-      "Derek",
-      "Elena",
-      "Finn",
-      "Grace",
-      "Hugo",
-      "Iris",
-      "Jack",
-      "Kira",
-      "Leo",
-      "Maya",
-      "Nolan",
-      "Olive",
-      "Penn",
-      "Quinn",
-      "Ruby",
-      "Sam",
-      "Tara",
+      'Aiden',
+      'Bella',
+      'Cora',
+      'Derek',
+      'Elena',
+      'Finn',
+      'Grace',
+      'Hugo',
+      'Iris',
+      'Jack',
+      'Kira',
+      'Leo',
+      'Maya',
+      'Nolan',
+      'Olive',
+      'Penn',
+      'Quinn',
+      'Ruby',
+      'Sam',
+      'Tara',
     ];
 
     const members: Adventurer[] = [];
     for (let i = 0; i < partySize; i++) {
-      const classData =
-        adventurerClasses[Math.floor(Math.random() * adventurerClasses.length)];
+      const classData = adventurerClasses[Math.floor(Math.random() * adventurerClasses.length)];
       const level = Math.floor(Math.random() * 3) + 1; // Level 1-3 starting adventurers
 
       const adventurer: Adventurer = {
@@ -86,9 +82,9 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
         experience: 0,
         gold: 0,
         equipment: {
-          weapon: "Basic Sword",
-          armor: "Leather Armor",
-          accessory: "None",
+          weapon: 'Basic Sword',
+          armor: 'Leather Armor',
+          accessory: 'None',
         },
         conditions: [],
         scaledStats: {
@@ -121,7 +117,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
     const gameConstants = await fetchGameConstantsData();
     if (!gameConstants) {
-      console.error("Failed to load game constants");
+      console.error('Failed to load game constants');
       return;
     }
 
@@ -131,36 +127,28 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
         removeAdventurerParty(party.id);
         addLog({
           message: `Party ${party.id} has retreated with ${party.loot} gold and ${party.casualties} casualties.`,
-          type: "adventure",
+          type: 'adventure',
           timestamp: Date.now(),
         });
         continue;
       }
 
-      const currentFloor = floors.find((f) => f.number === party.currentFloor);
+      const currentFloor = floors.find(f => f.number === party.currentFloor);
       if (!currentFloor) continue;
 
-      const currentRoom = currentFloor.rooms.find(
-        (r) => r.position === party.currentRoom,
-      );
+      const currentRoom = currentFloor.rooms.find(r => r.position === party.currentRoom);
       if (!currentRoom) continue;
 
       // Process combat in current room
-      if (
-        currentRoom.monsters.length > 0 &&
-        currentRoom.monsters.some((m) => m.alive)
-      ) {
+      if (currentRoom.monsters.length > 0 && currentRoom.monsters.some(m => m.alive)) {
         // Simple combat simulation
         const combatResult = Math.random();
 
         if (combatResult < 0.3) {
           // Adventurer death
-          const aliveAdventurers = party.members.filter((a) => a.alive);
+          const aliveAdventurers = party.members.filter(a => a.alive);
           if (aliveAdventurers.length > 0) {
-            const victim =
-              aliveAdventurers[
-                Math.floor(Math.random() * aliveAdventurers.length)
-              ];
+            const victim = aliveAdventurers[Math.floor(Math.random() * aliveAdventurers.length)];
             victim.alive = false;
 
             const casualties = party.casualties + 1;
@@ -174,7 +162,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
             addLog({
               message: `${victim.name} has fallen in Floor ${party.currentFloor}, Room ${party.currentRoom}! +${manaGain} mana`,
-              type: "combat",
+              type: 'combat',
               timestamp: Date.now(),
             });
 
@@ -183,17 +171,16 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
               updateAdventurerParty(party.id, { retreating: true });
               addLog({
                 message: `Party ${party.id} is retreating due to heavy casualties!`,
-                type: "adventure",
+                type: 'adventure',
                 timestamp: Date.now(),
               });
             }
           }
         } else if (combatResult < 0.6) {
           // Monster death
-          const aliveMonsters = currentRoom.monsters.filter((m) => m.alive);
+          const aliveMonsters = currentRoom.monsters.filter(m => m.alive);
           if (aliveMonsters.length > 0) {
-            const victim =
-              aliveMonsters[Math.floor(Math.random() * aliveMonsters.length)];
+            const victim = aliveMonsters[Math.floor(Math.random() * aliveMonsters.length)];
             victim.alive = false;
 
             // Award gold and experience
@@ -206,25 +193,24 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
             }
 
             addLog({
-              message: `${victim.type} defeated in Floor ${party.currentFloor}, Room ${party.currentRoom}! +${goldReward} gold${soulReward > 0 ? `, +${soulReward} soul` : ""}`,
-              type: "combat",
+              message: `${victim.type} defeated in Floor ${party.currentFloor}, Room ${party.currentRoom}! +${goldReward} gold${soulReward > 0 ? `, +${soulReward} soul` : ''}`,
+              type: 'combat',
               timestamp: Date.now(),
             });
 
             if (Math.random() < 0.2) {
               // 20% chance to speak after combat
               const victoryQuotes = [
-                "That was a hard fight!",
-                "Got it!",
-                "Nice teamwork!",
-                "One down!",
-                "Victory is ours!",
+                'That was a hard fight!',
+                'Got it!',
+                'Nice teamwork!',
+                'One down!',
+                'Victory is ours!',
               ];
-              const randomQuote =
-                victoryQuotes[Math.floor(Math.random() * victoryQuotes.length)];
+              const randomQuote = victoryQuotes[Math.floor(Math.random() * victoryQuotes.length)];
               addLog({
-                message: `${party.members.find((m) => m.alive)?.name || "Adventurer"} says: "${randomQuote}"`,
-                type: "adventure",
+                message: `${party.members.find(m => m.alive)?.name || 'Adventurer'} says: "${randomQuote}"`,
+                type: 'adventure',
                 timestamp: Date.now(),
               });
             }
@@ -238,17 +224,14 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
         if (nextRoomPosition >= roomsInFloor) {
           // Floor completed, check if going deeper
-          if (
-            party.currentFloor < party.targetFloor &&
-            party.currentFloor < floors.length
-          ) {
+          if (party.currentFloor < party.targetFloor && party.currentFloor < floors.length) {
             updateAdventurerParty(party.id, {
               currentFloor: party.currentFloor + 1,
               currentRoom: 0,
             });
             addLog({
               message: `Party ${party.id} descends to Floor ${party.currentFloor + 1}`,
-              type: "adventure",
+              type: 'adventure',
               timestamp: Date.now(),
             });
           } else {
@@ -258,7 +241,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
             addLog({
               message: `Party ${party.id} completed their exploration! +${party.loot} gold`,
-              type: "adventure",
+              type: 'adventure',
               timestamp: Date.now(),
             });
 
@@ -266,16 +249,15 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
               // 40% chance to speak when leaving
               const leaveQuotes = [
                 "I can't wait to come visit this dungeon again!",
-                "That was quite the adventure!",
-                "We did well today!",
-                "Time to head back to town.",
-                "Great haul everyone!",
+                'That was quite the adventure!',
+                'We did well today!',
+                'Time to head back to town.',
+                'Great haul everyone!',
               ];
-              const randomQuote =
-                leaveQuotes[Math.floor(Math.random() * leaveQuotes.length)];
+              const randomQuote = leaveQuotes[Math.floor(Math.random() * leaveQuotes.length)];
               addLog({
-                message: `${party.members.find((m) => m.alive)?.name || "Adventurer"} says: "${randomQuote}"`,
-                type: "adventure",
+                message: `${party.members.find(m => m.alive)?.name || 'Adventurer'} says: "${randomQuote}"`,
+                type: 'adventure',
                 timestamp: Date.now(),
               });
             }
@@ -285,7 +267,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
           updateAdventurerParty(party.id, { currentRoom: nextRoomPosition });
           addLog({
             message: `Party ${party.id} advances to Room ${nextRoomPosition} on Floor ${party.currentFloor}`,
-            type: "adventure",
+            type: 'adventure',
             timestamp: Date.now(),
           });
         }
@@ -295,7 +277,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
   // Spawn new adventurer parties
   const spawnAdventurerParty = async () => {
-    if (status !== "Open" || adventurerParties.length > 0) return;
+    if (status !== 'Open' || adventurerParties.length > 0) return;
     if (hour < nextPartySpawn) return;
 
     const spawnChance = Math.random();
@@ -311,24 +293,23 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
       addLog({
         message: `New adventurer party enters the dungeon! (${newParty.members.length} members)`,
-        type: "adventure",
+        type: 'adventure',
         timestamp: Date.now(),
       });
 
       if (Math.random() < 0.3) {
         // 30% chance to speak
         const enterQuotes = [
-          "Time to do this again!",
+          'Time to do this again!',
           "Let's see what treasures await!",
-          "This dungeon looks promising.",
-          "Stay close everyone!",
-          "Ready for adventure!",
+          'This dungeon looks promising.',
+          'Stay close everyone!',
+          'Ready for adventure!',
         ];
-        const randomQuote =
-          enterQuotes[Math.floor(Math.random() * enterQuotes.length)];
+        const randomQuote = enterQuotes[Math.floor(Math.random() * enterQuotes.length)];
         addLog({
           message: `${newParty.members[0].name} says: "${randomQuote}"`,
-          type: "adventure",
+          type: 'adventure',
           timestamp: Date.now(),
         });
       }
@@ -347,7 +328,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
 
         const gameConstants = await fetchGameConstantsData();
         if (!gameConstants) {
-          console.error("Failed to load game constants");
+          console.error('Failed to load game constants');
           return;
         }
         systemIntervalRef.current = setInterval(async () => {
@@ -355,11 +336,11 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({
             await spawnAdventurerParty();
             await processAdventurerParties();
           } catch (error) {
-            console.error("Error in adventurer system:", error);
+            console.error('Error in adventurer system:', error);
           }
         }, gameConstants.TIME_ADVANCE_INTERVAL);
       } catch (error) {
-        console.error("Error setting up adventurer system:", error);
+        console.error('Error setting up adventurer system:', error);
       }
     };
 

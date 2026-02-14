@@ -1,17 +1,10 @@
-import type {
-  GameState,
-  Monster,
-  MonsterType,
-  LogEntry,
-  DungeonFloor,
-  Room,
-} from "../types/game";
+import type { GameState, Monster, MonsterType, LogEntry, DungeonFloor, Room } from '../types/game';
 import {
   placeMonsterAPI,
   unlockMonsterSpeciesAPI,
   gainMonsterExperienceAPI,
   getAvailableMonstersAPI,
-} from "../api/gameApi";
+} from '../api/gameApi';
 
 // Define a type for the full GameStore actions that will be passed to these functions
 // This avoids circular dependency with the main gameStore.ts file
@@ -29,17 +22,13 @@ export const placeMonster = async (
   floorNumber: number,
   roomPosition: number,
   monsterName: string,
-  addLog: (entry: LogEntry | string) => void,
+  addLog: (entry: LogEntry | string) => void
 ) => {
   try {
-    const result = await placeMonsterAPI(
-      floorNumber,
-      roomPosition,
-      monsterName,
-    );
+    const result = await placeMonsterAPI(floorNumber, roomPosition, monsterName);
 
     if (!result.success) {
-      addLog(result.error || "Failed to place monster");
+      addLog(result.error || 'Failed to place monster');
       return false;
     }
 
@@ -79,12 +68,12 @@ export const placeMonster = async (
     });
 
     addLog(
-      `Spawned ${result.monster!.type}${result.monster!.isBoss ? " (Boss)" : ""} on floor ${floorNumber}, room ${roomPosition} for ${result.costPaid} mana`,
+      `Spawned ${result.monster!.type}${result.monster!.isBoss ? ' (Boss)' : ''} on floor ${floorNumber}, room ${roomPosition} for ${result.costPaid} mana`
     );
 
     return true;
   } catch {
-    addLog("Network error: Could not place monster");
+    addLog('Network error: Could not place monster');
     return false;
   }
 };
@@ -93,7 +82,7 @@ export const unlockMonsterSpecies = async (
   set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void,
   get: () => FullGameStore,
   speciesName: string,
-  addLog: (entry: LogEntry | string) => void,
+  addLog: (entry: LogEntry | string) => void
 ) => {
   void get;
   try {
@@ -101,11 +90,9 @@ export const unlockMonsterSpecies = async (
 
     if (!result.success) {
       if (result.required) {
-        addLog(
-          `Not enough gold to unlock ${speciesName}. Need ${result.required} gold.`,
-        );
+        addLog(`Not enough gold to unlock ${speciesName}. Need ${result.required} gold.`);
       } else {
-        addLog(result.error || "Failed to unlock species");
+        addLog(result.error || 'Failed to unlock species');
       }
       return;
     }
@@ -118,7 +105,7 @@ export const unlockMonsterSpecies = async (
 
     addLog(`Unlocked new monster species: ${speciesName}!`);
   } catch {
-    addLog("Network error: Could not unlock species");
+    addLog('Network error: Could not unlock species');
   }
 };
 
@@ -127,14 +114,14 @@ export const gainMonsterExperience = async (
   get: () => FullGameStore,
   monsterName: string,
   exp: number,
-  addLog: (entry: LogEntry | string) => void,
+  addLog: (entry: LogEntry | string) => void
 ) => {
   void get;
   try {
     const result = await gainMonsterExperienceAPI(monsterName, exp);
 
     if (!result.success) {
-      addLog(result.error || "Failed to gain experience");
+      addLog(result.error || 'Failed to gain experience');
       return;
     }
 
@@ -148,20 +135,18 @@ export const gainMonsterExperience = async (
 
     // Log tier unlocks if any
     if (result.tierUnlocks && result.tierUnlocks.length > 0) {
-      result.tierUnlocks.forEach((unlock) => {
-        addLog(
-          `Unlocked new tier (${unlock.tier}) for ${unlock.species} monsters!`,
-        );
+      result.tierUnlocks.forEach(unlock => {
+        addLog(`Unlocked new tier (${unlock.tier}) for ${unlock.species} monsters!`);
       });
     }
   } catch {
-    addLog("Network error: Could not gain experience");
+    addLog('Network error: Could not gain experience');
   }
 };
 
 export const getAvailableMonsters = async (
   set: (partial: Partial<FullGameStore>) => void,
-  get: () => FullGameStore,
+  get: () => FullGameStore
 ) => {
   void set;
   void get;
@@ -173,22 +158,22 @@ export const getAvailableMonsters = async (
     }
 
     // Convert backend response to frontend MonsterType format
-    const availableMonsters: MonsterType[] = result.monsters.map((monster) => ({
+    const availableMonsters: MonsterType[] = result.monsters.map(monster => ({
       name: monster.name,
       baseCost: 10, // Will be calculated server-side when placing
       hp: monster.hp,
       attack: monster.attack,
       defense: monster.defense,
-      color: "#808080", // Default color, could be enhanced
+      color: '#808080', // Default color, could be enhanced
       description: `Tier ${monster.tier} monster`,
-      species: "Unknown", // Will be filled by backend
+      species: 'Unknown', // Will be filled by backend
       tier: monster.tier,
       traits: [],
     }));
 
     return availableMonsters.sort((a, b) => a.tier - b.tier);
   } catch (error) {
-    console.error("Network error: Could not fetch available monsters", error);
+    console.error('Network error: Could not fetch available monsters', error);
     return [];
   }
 };

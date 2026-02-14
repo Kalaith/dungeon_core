@@ -1,16 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   getMonsterTypes,
   fetchGameConstantsData,
   fetchMonsterList,
   fetchMonsterSpeciesList,
-} from "../api/gameApi";
-import type {
-  MonsterType,
-  GameConstants,
-  MonsterList,
-  MonsterSpeciesList,
-} from "../types/game";
+} from '../api/gameApi';
+import type { MonsterType, GameConstants, MonsterList, MonsterSpeciesList } from '../types/game';
 
 interface GameData {
   monsterTypes: { [key: string]: MonsterType };
@@ -36,24 +31,21 @@ export const useGameData = (): UseGameDataReturn => {
     setError(null);
 
     try {
-      const [monsterTypes, gameConstants, monsterList, monsterSpecies] =
-        await Promise.all([
-          getMonsterTypes(),
-          fetchGameConstantsData(),
-          fetchMonsterList(),
-          fetchMonsterSpeciesList(),
-        ]);
+      const [monsterTypes, gameConstants, monsterList, monsterSpecies] = await Promise.all([
+        getMonsterTypes(),
+        fetchGameConstantsData(),
+        fetchMonsterList(),
+        fetchMonsterSpeciesList(),
+      ]);
 
       setData({
         monsterTypes,
         gameConstants: gameConstants || undefined,
         monsterList: monsterList as unknown as MonsterList | undefined,
-        monsterSpecies: monsterSpecies as unknown as
-          | MonsterSpeciesList
-          | undefined,
+        monsterSpecies: monsterSpecies as unknown as MonsterSpeciesList | undefined,
       });
     } catch (err) {
-      console.error("Error loading game data:", err);
+      console.error('Error loading game data:', err);
       setError(err as Error);
     } finally {
       setLoading(false);

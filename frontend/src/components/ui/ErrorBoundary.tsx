@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
@@ -30,12 +30,9 @@ export class ErrorBoundary extends Component<Props, State> {
         this.props.fallback || (
           <div className="error-boundary min-h-screen bg-red-900 flex items-center justify-center">
             <div className="bg-red-800 p-8 rounded-lg max-w-md text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Something went wrong
-              </h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Something went wrong</h2>
               <p className="text-red-200 mb-4">
-                The game encountered an error. Please refresh the page to
-                continue.
+                The game encountered an error. Please refresh the page to continue.
               </p>
               <button
                 onClick={() => window.location.reload()}
@@ -45,9 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
               {import.meta.env.DEV && this.state.error && (
                 <details className="mt-4 text-left">
-                  <summary className="cursor-pointer text-red-300">
-                    Error Details
-                  </summary>
+                  <summary className="cursor-pointer text-red-300">Error Details</summary>
                   <pre className="text-xs text-red-200 mt-2 overflow-auto">
                     {this.state.error.stack}
                   </pre>

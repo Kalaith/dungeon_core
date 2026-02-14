@@ -15,17 +15,14 @@ export interface GameStateResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
-    speciesProgress: Record<
-      string,
-      { experience: number; unlockedTier: number }
-    >;
+    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
   };
   floors?: Array<{
     id: number;
     number: number;
     rooms: Array<{
       id: number;
-      type: "entrance" | "normal" | "boss" | "core";
+      type: 'entrance' | 'normal' | 'boss' | 'core';
       position: number;
       floorNumber: number;
       monsters: Array<{
@@ -60,7 +57,7 @@ export interface DungeonStateResponse {
     isDeepest: boolean;
     rooms: Array<{
       id: number;
-      type: "entrance" | "normal" | "boss" | "core";
+      type: 'entrance' | 'normal' | 'boss' | 'core';
       position: number;
       floorNumber: number;
       explored: boolean;
@@ -229,10 +226,7 @@ export interface InitializeGameResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
-    speciesProgress: Record<
-      string,
-      { experience: number; unlockedTier: number }
-    >;
+    speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
     log: Array<{
       message: string;
       type: string;
@@ -244,7 +238,7 @@ export interface InitializeGameResponse {
     number: number;
     rooms: Array<{
       id: number;
-      type: "entrance" | "normal" | "boss" | "core";
+      type: 'entrance' | 'normal' | 'boss' | 'core';
       position: number;
       floorNumber: number;
       monsters: Array<{

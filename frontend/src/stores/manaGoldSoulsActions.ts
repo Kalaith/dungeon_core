@@ -1,4 +1,4 @@
-import type { GameState, LogEntry } from "../types/game";
+import type { GameState, LogEntry } from '../types/game';
 
 // Define a type for the full GameStore actions that will be passed to these functions
 // This avoids circular dependency with the main gameStore.ts file
@@ -12,7 +12,7 @@ type FullGameStore = GameState & GameStoreActions;
 export const spendMana = (
   set: (partial: Partial<FullGameStore>) => void,
   get: () => FullGameStore,
-  amount: number,
+  amount: number
 ) => {
   const state = get();
   if (state.mana >= amount) {
@@ -25,7 +25,7 @@ export const spendMana = (
 export const spendGold = (
   set: (partial: Partial<FullGameStore>) => void,
   get: () => FullGameStore,
-  amount: number,
+  amount: number
 ) => {
   const state = get();
   if (state.gold >= amount) {
@@ -38,7 +38,7 @@ export const spendGold = (
 export const gainGold = (
   set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void,
   _get: () => FullGameStore,
-  amount: number,
+  amount: number
 ) =>
   set((state: FullGameStore) => ({
     gold: state.gold + amount,
@@ -47,7 +47,7 @@ export const gainGold = (
 export const gainSouls = (
   set: (updater: (state: FullGameStore) => Partial<FullGameStore>) => void,
   _get: () => FullGameStore,
-  amount: number,
+  amount: number
 ) =>
   set((state: FullGameStore) => ({
     souls: state.souls + amount,

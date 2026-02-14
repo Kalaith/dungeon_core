@@ -1,20 +1,15 @@
-import React, { useState } from "react";
-import { useBackendGameStore } from "../../stores/backendGameStore";
+import React, { useState } from 'react';
+import { useBackendGameStore } from '../../stores/backendGameStore';
 
 export const BackendMonsterPlacement: React.FC = () => {
-  const { gameState, selectedMonster, placeMonster, selectMonster } =
-    useBackendGameStore();
+  const { gameState, selectedMonster, placeMonster, selectMonster } = useBackendGameStore();
   const [floorNumber, setFloorNumber] = useState<number>(1);
   const [roomPosition, setRoomPosition] = useState<number>(1);
 
   const handlePlaceMonster = async () => {
     if (!selectedMonster) return;
 
-    const success = await placeMonster(
-      floorNumber,
-      roomPosition,
-      selectedMonster,
-    );
+    const success = await placeMonster(floorNumber, roomPosition, selectedMonster);
     if (success) {
       selectMonster(null);
       setFloorNumber(1);
@@ -31,8 +26,7 @@ export const BackendMonsterPlacement: React.FC = () => {
       {selectedMonster ? (
         <div className="space-y-4">
           <div className="text-white">
-            Selected Monster:{" "}
-            <span className="font-bold text-blue-400">{selectedMonster}</span>
+            Selected Monster: <span className="font-bold text-blue-400">{selectedMonster}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -41,7 +35,7 @@ export const BackendMonsterPlacement: React.FC = () => {
               <input
                 type="number"
                 value={floorNumber}
-                onChange={(e) => setFloorNumber(parseInt(e.target.value) || 1)}
+                onChange={e => setFloorNumber(parseInt(e.target.value) || 1)}
                 className="bg-gray-700 text-white px-3 py-2 rounded"
                 min="1"
               />
@@ -51,7 +45,7 @@ export const BackendMonsterPlacement: React.FC = () => {
               <input
                 type="number"
                 value={roomPosition}
-                onChange={(e) => setRoomPosition(parseInt(e.target.value) || 1)}
+                onChange={e => setRoomPosition(parseInt(e.target.value) || 1)}
                 className="bg-gray-700 text-white px-3 py-2 rounded"
                 min="1"
               />
@@ -62,11 +56,9 @@ export const BackendMonsterPlacement: React.FC = () => {
             <button
               onClick={handlePlaceMonster}
               disabled={!gameState.canModifyDungeon}
-              className={`px-4 py-2 rounded ${gameState.canModifyDungeon ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"}`}
+              className={`px-4 py-2 rounded ${gameState.canModifyDungeon ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
             >
-              {gameState.canModifyDungeon
-                ? "Place Monster"
-                : "Close Dungeon to Build"}
+              {gameState.canModifyDungeon ? 'Place Monster' : 'Close Dungeon to Build'}
             </button>
             <button
               onClick={() => selectMonster(null)}
@@ -77,9 +69,7 @@ export const BackendMonsterPlacement: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-gray-400">
-          Select a monster from the Monster Selector to place it
-        </div>
+        <div className="text-gray-400">Select a monster from the Monster Selector to place it</div>
       )}
     </div>
   );

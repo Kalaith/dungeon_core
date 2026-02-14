@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-import { useGameStore } from "../../stores/gameStore";
-import { fetchGameConstantsData } from "../../api/gameApi";
+import { useEffect, useRef } from 'react';
+import { useGameStore } from '../../stores/gameStore';
+import { fetchGameConstantsData } from '../../api/gameApi';
 
 export const TimeSystem: React.FC = () => {
   const { advanceTime } = useGameStore();
@@ -13,7 +13,7 @@ export const TimeSystem: React.FC = () => {
       }
       const gameConstants = await fetchGameConstantsData();
       if (!gameConstants) {
-        console.error("Failed to load game constants");
+        console.error('Failed to load game constants');
         return;
       }
       timeIntervalRef.current = setInterval(() => {

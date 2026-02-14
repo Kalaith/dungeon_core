@@ -1,6 +1,6 @@
-import type { GameState, DungeonFloor, Room, LogEntry } from "../types/game";
-import { fetchGameConstantsData } from "../api/gameApi";
-import { getRoomCost } from "../api/gameApi";
+import type { GameState, DungeonFloor, Room, LogEntry } from '../types/game';
+import { fetchGameConstantsData } from '../api/gameApi';
+import { getRoomCost } from '../api/gameApi';
 
 // Define a type for the full GameStore actions that will be passed to these functions
 // This avoids circular dependency with the main gameStore.ts file
@@ -17,15 +17,15 @@ type FullGameStore = GameState & GameStoreActions;
 export const addRoom = async (
   set: (partial: Partial<FullGameStore>) => void,
   get: () => FullGameStore,
-  targetFloorNumber?: number,
+  targetFloorNumber?: number
 ) => {
   const state = get();
 
   // Cannot add rooms while adventurers are in dungeon
   if (state.adventurerParties.length > 0) {
     get().addLog({
-      message: "Cannot add rooms while adventurers are in the dungeon!",
-      type: "system",
+      message: 'Cannot add rooms while adventurers are in the dungeon!',
+      type: 'system',
     });
     return false;
   }
@@ -33,21 +33,19 @@ export const addRoom = async (
   let targetFloor: DungeonFloor;
 
   if (targetFloorNumber) {
-    const floor = state.floors.find((f) => f.number === targetFloorNumber);
+    const floor = state.floors.find(f => f.number === targetFloorNumber);
     if (!floor) return false;
     targetFloor = floor;
   } else {
     // Add to the deepest floor by default
-    targetFloor =
-      state.floors.find((f) => f.isDeepest) ||
-      state.floors[state.floors.length - 1];
+    targetFloor = state.floors.find(f => f.isDeepest) || state.floors[state.floors.length - 1];
   } // Check if current floor is full (entrance + 5 regular/boss rooms, excluding core room)
-  const nonCoreRooms = targetFloor.rooms.filter((room) => room.type !== "core");
+  const nonCoreRooms = targetFloor.rooms.filter(room => room.type !== 'core');
   const gameConstants = await fetchGameConstantsData();
   if (!gameConstants) {
     get().addLog({
-      message: "Failed to load game constants!",
-      type: "system",
+      message: 'Failed to load game constants!',
+      type: 'system',
     });
     return false;
   }
@@ -55,19 +53,16 @@ export const addRoom = async (
     // Creating new floor - calculate total rooms across all floors
     const totalRoomCount = state.floors.reduce((total, floor) => {
       return (
-        total +
-        floor.rooms.filter(
-          (room) => room.type !== "core" && room.type !== "entrance",
-        ).length
+        total + floor.rooms.filter(room => room.type !== 'core' && room.type !== 'entrance').length
       );
     }, 0);
-    const roomCost = getRoomCost(totalRoomCount, "normal");
+    const roomCost = getRoomCost(totalRoomCount, 'normal');
 
     // Check if player has enough mana
     if (state.mana < roomCost) {
       get().addLog({
         message: `Not enough mana! Need ${roomCost} mana to create a new floor.`,
-        type: "system",
+        type: 'system',
       });
       return false;
     }
@@ -81,7 +76,7 @@ export const addRoom = async (
     // Add a normal room to the new floor
     const newRoom: Room = {
       id: Date.now() + 2,
-      type: "normal",
+      type: 'normal',
       position: 1,
       floorNumber: newFloor.number,
       monsters: [],
@@ -92,13 +87,13 @@ export const addRoom = async (
     newFloor.rooms.push(newRoom);
 
     // Update floor states and handle core room transfer
-    const updatedFloors = state.floors.map((f) => {
+    const updatedFloors = state.floors.map(f => {
       // Remove core room from previous deepest floor
       if (f.isDeepest) {
         return {
           ...f,
           isDeepest: false,
-          rooms: f.rooms.filter((room) => room.type !== "core"),
+          rooms: f.rooms.filter(room => room.type !== 'core'),
         };
       }
       return { ...f, isDeepest: false };
@@ -108,7 +103,7 @@ export const addRoom = async (
     // Add core room to the new deepest floor only
     const coreRoom: Room = {
       id: Date.now() + 3,
-      type: "core",
+      type: 'core',
       position: gameConstants.MAX_ROOMS_PER_FLOOR + 1,
       floorNumber: newFloor.number,
       monsters: [],
@@ -126,37 +121,29 @@ export const addRoom = async (
     get().updateDeepCoreBonus();
     get().addLog({
       message: `New floor ${newFloor.number} created! Room added at position 1 for ${roomCost} mana.`,
-      type: "system",
+      type: 'system',
     });
 
     // Debug: Log current core room status
-    const coreRooms = updatedFloors.flatMap((f) =>
-      f.rooms.filter((r) => r.type === "core"),
-    );
+    const coreRooms = updatedFloors.flatMap(f => f.rooms.filter(r => r.type === 'core'));
     get().addLog({
-      message: `Debug: ${coreRooms.length} core room(s) exist. On floors: ${coreRooms.map((r) => r.floorNumber).join(", ")}`,
-      type: "system",
+      message: `Debug: ${coreRooms.length} core room(s) exist. On floors: ${coreRooms.map(r => r.floorNumber).join(', ')}`,
+      type: 'system',
       timestamp: Date.now(),
     });
 
     return true;
   } else {
     // Add room to current floor, inserting before the core room
-    const coreRoom = targetFloor.rooms.find((room) => room.type === "core");
-    const nonCoreRooms = targetFloor.rooms.filter(
-      (room) => room.type !== "core",
-    );
+    const coreRoom = targetFloor.rooms.find(room => room.type === 'core');
+    const nonCoreRooms = targetFloor.rooms.filter(room => room.type !== 'core');
     const nextPosition = nonCoreRooms.length;
-    const roomType =
-      nextPosition === gameConstants.MAX_ROOMS_PER_FLOOR ? "boss" : "normal";
+    const roomType = nextPosition === gameConstants.MAX_ROOMS_PER_FLOOR ? 'boss' : 'normal';
 
     // Calculate room cost based on total room count across all floors
     const totalRoomCount = state.floors.reduce((total, floor) => {
       return (
-        total +
-        floor.rooms.filter(
-          (room) => room.type !== "core" && room.type !== "entrance",
-        ).length
+        total + floor.rooms.filter(room => room.type !== 'core' && room.type !== 'entrance').length
       );
     }, 0);
     const roomCost = getRoomCost(totalRoomCount, roomType);
@@ -165,7 +152,7 @@ export const addRoom = async (
     if (state.mana < roomCost) {
       get().addLog({
         message: `Not enough mana! Need ${roomCost} mana to add a ${roomType} room.`,
-        type: "system",
+        type: 'system',
       });
       return false;
     }
@@ -195,7 +182,7 @@ export const addRoom = async (
       updatedRooms.push(updatedCoreRoom);
     }
 
-    const updatedFloors = state.floors.map((floor) => {
+    const updatedFloors = state.floors.map(floor => {
       if (floor.id === targetFloor.id) {
         return {
           ...floor,
@@ -207,17 +194,15 @@ export const addRoom = async (
 
     set({ floors: updatedFloors });
     get().addLog({
-      message: `${roomType === "boss" ? "Boss room" : "Normal room"} added to floor ${targetFloor.number} at position ${nextPosition} for ${roomCost} mana.`,
-      type: "system",
+      message: `${roomType === 'boss' ? 'Boss room' : 'Normal room'} added to floor ${targetFloor.number} at position ${nextPosition} for ${roomCost} mana.`,
+      type: 'system',
     });
 
     // Debug: Log current core room status
-    const coreRooms = updatedFloors.flatMap((f) =>
-      f.rooms.filter((r) => r.type === "core"),
-    );
+    const coreRooms = updatedFloors.flatMap(f => f.rooms.filter(r => r.type === 'core'));
     get().addLog({
-      message: `Debug: ${coreRooms.length} core room(s) exist. On floors: ${coreRooms.map((r) => r.floorNumber).join(", ")}`,
-      type: "system",
+      message: `Debug: ${coreRooms.length} core room(s) exist. On floors: ${coreRooms.map(r => r.floorNumber).join(', ')}`,
+      type: 'system',
       timestamp: Date.now(),
     });
 

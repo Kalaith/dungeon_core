@@ -1,4 +1,4 @@
-import type { InitializeGameResponse } from "./types";
+import type { InitializeGameResponse } from './types';
 
 export interface ResetGameResponse {
   success: boolean;

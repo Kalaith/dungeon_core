@@ -5,13 +5,9 @@ import type {
   FloorScaling,
   DeepFloorScaling,
   MonsterTrait,
-} from "../types/game";
-import { apiClient } from "./client";
-import type {
-  GameStateResponse,
-  InitializeGameResponse,
-  DungeonStateResponse,
-} from "./types";
+} from '../types/game';
+import { apiClient } from './client';
+import type { GameStateResponse, InitializeGameResponse, DungeonStateResponse } from './types';
 
 // Cache for static data
 let gameConstantsCache: GameConstants | null = null;
@@ -42,7 +38,7 @@ export const getDungeonState = async (): Promise<DungeonStateResponse> => {
 export const placeMonsterAPI = async (
   floorNumber: number,
   roomPosition: number,
-  monsterType: string,
+  monsterType: string
 ) => {
   return apiClient.placeMonster({ floorNumber, roomPosition, monsterType });
 };
@@ -53,10 +49,7 @@ export const unlockMonsterSpeciesAPI = async (speciesName: string) => {
 };
 
 // Gain monster experience via backend (secure)
-export const gainMonsterExperienceAPI = async (
-  monsterName: string,
-  experience: number,
-) => {
+export const gainMonsterExperienceAPI = async (monsterName: string, experience: number) => {
   return apiClient.gainMonsterExperience({ monsterName, experience });
 };
 
@@ -70,7 +63,7 @@ export const addRoomAPI = async (
   floorNumber: number,
   roomType: string,
   position: number,
-  cost: number,
+  cost: number
 ) => {
   return apiClient.addRoom({ floorNumber, roomType, position, cost });
 };
@@ -88,8 +81,7 @@ export const updateDungeonStatus = async (status: string) => {
 // Game constants from backend (cached)
 export const fetchGameConstantsData = async () => {
   if (gameConstantsCache === null) {
-    gameConstantsCache =
-      (await apiClient.getGameConstants()) as unknown as GameConstants;
+    gameConstantsCache = (await apiClient.getGameConstants()) as unknown as GameConstants;
   }
   return gameConstantsCache;
 };
@@ -135,8 +127,7 @@ export const fetchMonsterTraits = async () => {
 
 export const fetchEquipmentData = async () => {
   if (equipmentDataCache === null) {
-    equipmentDataCache =
-      (await apiClient.getEquipmentData()) as unknown as EquipmentData;
+    equipmentDataCache = (await apiClient.getEquipmentData()) as unknown as EquipmentData;
   }
   return equipmentDataCache!;
 };
@@ -174,7 +165,7 @@ export const clearDataCache = () => {
 export const getScaledMonsterStats = (
   baseStats: { hp: number; attack: number; defense: number },
   floorNumber: number,
-  isBoss: boolean = false,
+  isBoss: boolean = false
 ): { hp: number; attack: number; defense: number } => {
   const floorMultiplier = 1 + (floorNumber - 1) * 0.2;
   const bossMultiplier = isBoss ? 1.5 : 1;
@@ -189,22 +180,19 @@ export const getScaledMonsterStats = (
 export const getMonsterManaCost = (
   baseCost: number,
   floorNumber: number,
-  isBossRoom: boolean = false,
+  isBossRoom: boolean = false
 ): number => {
   const floorMultiplier = 1 + (floorNumber - 1) * 0.5;
   const bossMultiplier = isBossRoom ? 2.0 : 1.0;
   return Math.floor(baseCost * floorMultiplier * bossMultiplier);
 };
 
-export const getRoomCost = (
-  totalRoomCount: number,
-  roomType: "normal" | "boss",
-): number => {
+export const getRoomCost = (totalRoomCount: number, roomType: 'normal' | 'boss'): number => {
   const baseCost = 20;
   const linearIncrease = totalRoomCount * 5;
   let totalCost = baseCost + linearIncrease;
 
-  if (roomType === "boss") {
+  if (roomType === 'boss') {
     totalCost += 30;
   }
 

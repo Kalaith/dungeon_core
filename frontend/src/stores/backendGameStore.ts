@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import {
   initializeGame,
   getGameState,
@@ -6,8 +6,8 @@ import {
   addRoomAPI,
   resetGameAPI,
   updateDungeonStatus,
-} from "../api/gameApi";
-import { useSpeciesStore } from "./speciesStore";
+} from '../api/gameApi';
+import { useSpeciesStore } from './speciesStore';
 
 // Export the GameState type for use in components
 export interface GameState {
@@ -41,13 +41,9 @@ interface BackendGameState {
   placeMonster: (
     floorNumber: number,
     roomPosition: number,
-    monsterType: string,
+    monsterType: string
   ) => Promise<boolean>;
-  addRoom: (
-    floorNumber: number,
-    roomType: string,
-    position: number,
-  ) => Promise<boolean>;
+  addRoom: (floorNumber: number, roomType: string, position: number) => Promise<boolean>;
   updateStatus: (status: string) => Promise<boolean>;
 }
 
@@ -60,9 +56,9 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
   initializeGame: async () => {
     set({ loading: true, error: null });
     try {
-      console.log("Starting game initialization...");
+      console.log('Starting game initialization...');
       const initialData = await initializeGame();
-      console.log("Initialize game response received:", initialData);
+      console.log('Initialize game response received:', initialData);
 
       // Only store the minimal game state
       set({
@@ -88,16 +84,15 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           .setSpeciesData(
             initialData.game.unlockedMonsterSpecies,
             initialData.game.speciesExperience || {},
-            initialData.game.speciesProgress || {},
+            initialData.game.speciesProgress || {}
           );
       }
 
-      console.log("Game state initialized successfully");
+      console.log('Game state initialized successfully');
     } catch (error) {
-      console.error("Error during game initialization:", error);
+      console.error('Error during game initialization:', error);
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to initialize game",
+        error: error instanceof Error ? error.message : 'Failed to initialize game',
         loading: false,
       });
     }
@@ -126,7 +121,7 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
         currentGame.activeAdventurerParties !== newGame.activeAdventurerParties;
 
       if (needsUpdate) {
-        console.log("Game state changed, updating...");
+        console.log('Game state changed, updating...');
         set({
           gameState: {
             day: newGame.day,
@@ -142,7 +137,7 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           },
         });
       } else {
-        console.log("Game state unchanged, skipping update");
+        console.log('Game state unchanged, skipping update');
       }
 
       if (newGame.unlockedMonsterSpecies) {
@@ -151,46 +146,34 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           .setSpeciesData(
             newGame.unlockedMonsterSpecies,
             newGame.speciesExperience || {},
-            newGame.speciesProgress || {},
+            newGame.speciesProgress || {}
           );
       }
     } catch (error) {
       set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to refresh game state",
+        error: error instanceof Error ? error.message : 'Failed to refresh game state',
       });
     }
   },
 
-  selectMonster: (monster) => set({ selectedMonster: monster }),
+  selectMonster: monster => set({ selectedMonster: monster }),
 
-  placeMonster: async (
-    floorNumber: number,
-    roomPosition: number,
-    monsterType: string,
-  ) => {
+  placeMonster: async (floorNumber: number, roomPosition: number, monsterType: string) => {
     try {
-      const result = await placeMonsterAPI(
-        floorNumber,
-        roomPosition,
-        monsterType,
-      );
+      const result = await placeMonsterAPI(floorNumber, roomPosition, monsterType);
 
       if (result.success) {
         // Refresh minimal game state (mana, gold, etc.)
         await get().refreshGameState();
         return true;
       } else {
-        set({ error: result.error || "Failed to place monster" });
+        set({ error: result.error || 'Failed to place monster' });
         await get().refreshGameState();
         return false;
       }
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to place monster",
+        error: error instanceof Error ? error.message : 'Failed to place monster',
       });
       await get().refreshGameState();
       return false;
@@ -207,14 +190,14 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
         await get().refreshGameState();
         return true;
       } else {
-        const errorMessage = result.error || "Failed to add room";
+        const errorMessage = result.error || 'Failed to add room';
         set({ error: errorMessage });
         await get().refreshGameState();
         return false;
       }
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : "Failed to add room",
+        error: error instanceof Error ? error.message : 'Failed to add room',
       });
       return false;
     }
@@ -229,14 +212,11 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
         return true;
       }
 
-      set({ error: result.error || "Failed to update dungeon status" });
+      set({ error: result.error || 'Failed to update dungeon status' });
       return false;
     } catch (error) {
       set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update dungeon status",
+        error: error instanceof Error ? error.message : 'Failed to update dungeon status',
       });
       return false;
     }
@@ -245,11 +225,11 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
   resetGame: async () => {
     set({ loading: true, error: null });
     try {
-      console.log("Resetting game...");
+      console.log('Resetting game...');
       const result = await resetGameAPI();
 
       if (result.success && result.gameData) {
-        console.log("Game reset successful");
+        console.log('Game reset successful');
         set({
           gameState: {
             day: result.gameData.game.day,
@@ -261,8 +241,7 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
             souls: result.gameData.game.souls,
             status: result.gameData.game.status,
             canModifyDungeon: result.gameData.game.canModifyDungeon,
-            activeAdventurerParties:
-              result.gameData.game.activeAdventurerParties,
+            activeAdventurerParties: result.gameData.game.activeAdventurerParties,
           },
           loading: false,
           error: null,
@@ -274,16 +253,16 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           .setSpeciesData(
             result.gameData.game.unlockedMonsterSpecies || [],
             result.gameData.game.speciesExperience || {},
-            result.gameData.game.speciesProgress || {},
+            result.gameData.game.speciesProgress || {}
           );
-        console.log("Game reset complete");
+        console.log('Game reset complete');
       } else {
-        set({ error: result.error || "Failed to reset game", loading: false });
+        set({ error: result.error || 'Failed to reset game', loading: false });
       }
     } catch (error) {
-      console.error("Error during game reset:", error);
+      console.error('Error during game reset:', error);
       set({
-        error: error instanceof Error ? error.message : "Failed to reset game",
+        error: error instanceof Error ? error.message : 'Failed to reset game',
         loading: false,
       });
     }
