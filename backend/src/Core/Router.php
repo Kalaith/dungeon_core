@@ -100,7 +100,10 @@ final class Router
                 try {
                     $response = $this->invokeHandler($route['handler'], $request, $response, $routeParams);
                 } catch (Throwable $e) {
-                    $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+                    $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? ''));
+                    $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true'
+                        || ($_ENV['DEBUG'] ?? 'false') === 'true'
+                        || $appEnv === 'preview';
                     $payload = [
                         'success' => false,
                         'error' => 'Internal server error'

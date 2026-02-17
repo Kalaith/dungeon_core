@@ -8,6 +8,9 @@ use PDO;
 
 class MySQLGameRepository implements GameRepositoryInterface
 {
+    /** @var array<string, bool> */
+    private array $playerColumns = [];
+
     public function __construct(private PDO $connection) {}
 
     public function findBySessionId(string $sessionId): ?Game
@@ -23,10 +26,16 @@ class MySQLGameRepository implements GameRepositoryInterface
 
     public function save(Game $game): void
     {
-        $stmt = $this->connection->prepare(
-            'UPDATE players SET mana = ?, mana_regen = ?, gold = ?, souls = ?, day = ?, hour = ?, status = ?, unlocked_species = ?, species_experience = ?, monster_experience = ? WHERE id = ?'
-        );
-        $stmt->execute([
+        $setParts = [
+            'mana = ?',
+            'mana_regen = ?',
+            'gold = ?',
+            'souls = ?',
+            'day = ?',
+            'hour = ?',
+            'status = ?',
+        ];
+        $params = [
             $game->getMana(),
             $game->getManaRegen(),
             $game->getGold(),
@@ -34,20 +43,56 @@ class MySQLGameRepository implements GameRepositoryInterface
             $game->getDay(),
             $game->getHour(),
             $game->getStatus(),
-            json_encode($game->getUnlockedSpecies()),
-            json_encode($game->getSpeciesExperience()),
-            json_encode($game->getMonsterExperienceMap()),
-            $game->getId()
-        ]);
+        ];
+
+        if ($this->hasPlayerColumn('unlocked_species')) {
+            $setParts[] = 'unlocked_species = ?';
+            $params[] = json_encode($game->getUnlockedSpecies());
+        }
+        if ($this->hasPlayerColumn('species_experience')) {
+            $setParts[] = 'species_experience = ?';
+            $params[] = json_encode($game->getSpeciesExperience());
+        }
+        if ($this->hasPlayerColumn('monster_experience')) {
+            $setParts[] = 'monster_experience = ?';
+            $params[] = json_encode($game->getMonsterExperienceMap());
+        }
+
+        $params[] = $game->getId();
+        $sql = 'UPDATE players SET ' . implode(', ', $setParts) . ' WHERE id = ?';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
     }
 
     public function create(string $sessionId): Game
     {
-        $stmt = $this->connection->prepare(
-            'INSERT INTO players (session_id, mana, max_mana, mana_regen, gold, souls, day, hour, status, unlocked_species, species_experience, monster_experience)
-             VALUES (?, 50, 100, 1, 100, 0, 1, 6, "Open", "[]", "{}", "{}")'
+        $columns = ['session_id', 'mana', 'max_mana', 'mana_regen', 'gold', 'souls', 'day', 'hour', 'status'];
+        $values = ['?', '?', '?', '?', '?', '?', '?', '?', '?'];
+        $params = [$sessionId, 50, 100, 1, 100, 0, 1, 6, 'Open'];
+
+        if ($this->hasPlayerColumn('unlocked_species')) {
+            $columns[] = 'unlocked_species';
+            $values[] = '?';
+            $params[] = '[]';
+        }
+        if ($this->hasPlayerColumn('species_experience')) {
+            $columns[] = 'species_experience';
+            $values[] = '?';
+            $params[] = '{}';
+        }
+        if ($this->hasPlayerColumn('monster_experience')) {
+            $columns[] = 'monster_experience';
+            $values[] = '?';
+            $params[] = '{}';
+        }
+
+        $sql = sprintf(
+            'INSERT INTO players (%s) VALUES (%s)',
+            implode(', ', $columns),
+            implode(', ', $values)
         );
-        $stmt->execute([$sessionId]);
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
 
         $id = $this->connection->lastInsertId();
         return new Game($id, 50, 100, 1, 100, 0, 1, 6, 'Open', [], [], [], 0);
@@ -124,5 +169,20 @@ class MySQLGameRepository implements GameRepositoryInterface
         $game->setActivePartyCount($activeParties);
 
         return $game;
+    }
+
+    private function hasPlayerColumn(string $column): bool
+    {
+        if (empty($this->playerColumns)) {
+            $stmt = $this->connection->query('SHOW COLUMNS FROM players');
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as $row) {
+                if (isset($row['Field']) && is_string($row['Field'])) {
+                    $this->playerColumns[$row['Field']] = true;
+                }
+            }
+        }
+
+        return isset($this->playerColumns[$column]);
     }
 }

@@ -15,7 +15,7 @@ class AuthController
                 'success' => false,
                 'error' => 'Authentication required',
                 'message' => 'Unauthorized',
-                'login_url' => $_ENV['WEB_HATCHERY_LOGIN_URL'] ?? ''
+                'login_url' => $_ENV['LOGIN_URL'] ?? ''
             ]));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }

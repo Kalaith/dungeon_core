@@ -16,7 +16,15 @@ import type {
 import type { ResetGameResponse } from './resetTypes';
 
 class ApiClient {
-  private baseUrl = 'http://localhost:8000/api';
+  private baseUrl: string;
+
+  constructor() {
+    const configuredApiUrl = import.meta.env.VITE_API_URL as string | undefined;
+    if (!configuredApiUrl || configuredApiUrl.trim().length === 0) {
+      throw new Error('VITE_API_URL is required');
+    }
+    this.baseUrl = configuredApiUrl.replace(/\/$/, '');
+  }
 
   private getAuthToken(): string | null {
     try {
