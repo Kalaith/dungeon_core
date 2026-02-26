@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface AuthState {
-    user: any;
+    user: Record<string, unknown> | null;
     token: string | null;
     loginUrl: string | null;
     setLoginUrl: (url: string | null) => void;
-    login: (user: any, token: string) => void;
+    login: (user: Record<string, unknown>, token: string) => void;
     logout: () => void;
 }
 
