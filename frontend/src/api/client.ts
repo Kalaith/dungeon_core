@@ -14,6 +14,7 @@ import type {
   UpdateDungeonStatusResponse,
 } from './types';
 import type { ResetGameResponse } from './resetTypes';
+import { getActiveAuthToken } from '../stores/authStore';
 
 class ApiClient {
   private baseUrl: string;
@@ -27,14 +28,7 @@ class ApiClient {
   }
 
   private getAuthToken(): string | null {
-    try {
-      const raw = localStorage.getItem('auth-storage');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
-      return parsed.state?.token ?? null;
-    } catch {
-      return null;
-    }
+    return getActiveAuthToken();
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {

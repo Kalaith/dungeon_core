@@ -15,8 +15,10 @@ return function (
 ): void {
     $api = '/api';
 
-    // Auth session
+    // Auth endpoints
     $router->get($api . '/auth/session', [AuthController::class, 'session'], [WebHatcheryJwtMiddleware::class]);
+    $router->post($api . '/auth/guest-session', [AuthController::class, 'guestSession']);
+    $router->post($api . '/auth/link-guest', [AuthController::class, 'linkGuest'], [WebHatcheryJwtMiddleware::class]);
 
     // Game routes (protected)
     $router->get($api . '/game/initialize', [$gameController, 'initialize'], [WebHatcheryJwtMiddleware::class]);

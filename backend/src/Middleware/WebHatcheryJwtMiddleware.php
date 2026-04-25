@@ -52,13 +52,18 @@ class WebHatcheryJwtMiddleware
 
             $roles = $decoded->roles ?? (($decoded->role ?? null) ? [$decoded->role] : ['user']);
             $primaryRole = is_array($roles) ? ($roles[0] ?? 'user') : (string) $roles;
+            $isGuest = (bool) ($decoded->is_guest ?? false);
+            $authType = $decoded->auth_type ?? ($isGuest ? 'guest' : 'frontpage');
 
             $request = $request->withAttribute('auth_user', [
-                'id' => (int) $userId,
+                'id' => (string) $userId,
                 'email' => $decoded->email ?? null,
                 'username' => $decoded->username ?? null,
+                'display_name' => $decoded->display_name ?? $decoded->username ?? null,
                 'role' => $primaryRole,
                 'roles' => is_array($roles) ? $roles : [$roles],
+                'auth_type' => is_string($authType) ? $authType : 'frontpage',
+                'is_guest' => $isGuest,
             ]);
 
             return $request;
