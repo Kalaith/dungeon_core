@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 $autoloadCandidates = [
     __DIR__ . '/../vendor/autoload.php',
     __DIR__ . '/../../vendor/autoload.php',
     __DIR__ . '/../../../vendor/autoload.php',
     __DIR__ . '/../../../../vendor/autoload.php',
 ];
-
 $autoloadPath = null;
 foreach ($autoloadCandidates as $candidate) {
     if (file_exists($candidate)) {
@@ -25,20 +26,8 @@ if ($projectSrc !== false && $loader instanceof \Composer\Autoload\ClassLoader) 
     $loader->addPsr4('DungeonCore\\', $projectSrc . DIRECTORY_SEPARATOR, true);
 }
 
-// Load environment variables from .env file if it exists
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
-            continue; // Skip comments and invalid lines
-        }
-        list($key, $value) = explode('=', $line, 2);
-        $_ENV[trim($key)] = trim($value);
-    }
-}
-
 use DungeonCore\Core\Router;
+use DungeonCore\Core\Environment;
 use DungeonCore\Controllers\GameController;
 use DungeonCore\Controllers\DungeonController;
 use DungeonCore\Controllers\DataController;
@@ -58,27 +47,28 @@ use DungeonCore\Application\UseCases\GetMonsterTypesUseCase;
 use DungeonCore\Application\UseCases\GetMonsterTraitsUseCase;
 use DungeonCore\Application\UseCases\GetEquipmentDataUseCase;
 use DungeonCore\Application\UseCases\GetFloorScalingUseCase;
+use DungeonCore\Application\UseCases\LinkGuestAccountUseCase;
 use DungeonCore\Infrastructure\Database\MySQL\MySQLGameRepository;
 use DungeonCore\Infrastructure\Database\MySQL\MySQLDungeonRepository;
 use DungeonCore\Infrastructure\Database\MySQL\MySQLEquipmentRepository;
 use DungeonCore\Infrastructure\Database\MySQL\MySQLDataRepository;
 use DungeonCore\Infrastructure\Database\DatabaseInitializer;
 use DungeonCore\Domain\Services\GameLogic;
-
+Environment::load([
+    __DIR__ . '/../.env',
+    __DIR__ . '/../../.env',
+]);
 // Database connection with auto-initialization
 $config = require __DIR__ . '/../config/database.php';
 $dbInitializer = new DatabaseInitializer($config);
 $pdo = $dbInitializer->initialize();
-
 // Repositories
 $gameRepo = new MySQLGameRepository($pdo);
 $dungeonRepo = new MySQLDungeonRepository($pdo);
 $equipmentRepo = new MySQLEquipmentRepository($pdo);
 $dataRepo = new MySQLDataRepository($pdo);
-
 // Services
 $gameLogic = new GameLogic($dataRepo);
-
 // Use Cases
 $getGameStateUseCase = new GetGameStateUseCase($gameRepo, $dungeonRepo, $gameLogic);
 $getDungeonStateUseCase = new GetDungeonStateUseCase($gameRepo, $dungeonRepo);
@@ -90,18 +80,17 @@ $unlockMonsterSpeciesUseCase = new UnlockMonsterSpeciesUseCase($gameRepo, $gameL
 $gainMonsterExperienceUseCase = new GainMonsterExperienceUseCase($gameRepo, $gameLogic);
 $getAvailableMonstersUseCase = new GetAvailableMonstersUseCase($gameRepo, $gameLogic);
 $updateDungeonStatusUseCase = new UpdateDungeonStatusUseCase($gameRepo);
-
+$linkGuestAccountUseCase = new LinkGuestAccountUseCase($gameRepo);
 // Data Use Cases
 $getGameConstantsUseCase = new GetGameConstantsUseCase($dataRepo);
 $getMonsterTypesUseCase = new GetMonsterTypesUseCase($dataRepo);
 $getMonsterTraitsUseCase = new GetMonsterTraitsUseCase($dataRepo);
 $getEquipmentDataUseCase = new GetEquipmentDataUseCase($equipmentRepo);
 $getFloorScalingUseCase = new GetFloorScalingUseCase($dataRepo);
-
 // Controllers
 $gameController = new GameController(
-    $getGameStateUseCase, 
-    $placeMonsterUseCase, 
+    $getGameStateUseCase,
+    $placeMonsterUseCase,
     $initializeGameUseCase,
     $resetGameUseCase,
     $unlockMonsterSpeciesUseCase,
@@ -117,13 +106,12 @@ $dataController = new DataController(
     $getEquipmentDataUseCase,
     $getFloorScalingUseCase
 );
-
+$authController = new AuthController($linkGuestAccountUseCase);
 // Router
 $router = new Router();
-
 // Set base path for subdirectory deployment
-if (isset($_ENV['APP_BASE_PATH']) && $_ENV['APP_BASE_PATH']) {
-    $router->setBasePath(rtrim($_ENV['APP_BASE_PATH'], '/'));
+if (Environment::optional('APP_BASE_PATH') !== null) {
+    $router->setBasePath(rtrim(Environment::required('APP_BASE_PATH'), '/'));
 } else {
     $requestPath = $_SERVER['REQUEST_URI'] ?? '';
     $requestPath = parse_url($requestPath, PHP_URL_PATH) ?? '';
@@ -152,7 +140,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 }
 
 // Load routes
-(require __DIR__ . '/../src/Routes/router.php')($router, $gameController, $dungeonController, $dataController);
-
+(require __DIR__ . '/../src/Routes/router.php')(
+    $router,
+    $gameController,
+    $dungeonController,
+    $dataController,
+    $authController
+);
 // Run router
 $router->handle();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -10,7 +12,8 @@ class GetAvailableMonstersUseCase
     public function __construct(
         private GameRepositoryInterface $gameRepo,
         private GameLogic $gameLogic
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId): array
     {
@@ -38,7 +41,7 @@ class GetAvailableMonstersUseCase
         }
 
         // Sort by tier
-        usort($availableMonsters, function($a, $b) {
+        usort($availableMonsters, function ($a, $b) {
             return $a['tier'] <=> $b['tier'];
         });
 

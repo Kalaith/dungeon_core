@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Domain\Services;
 
 use DungeonCore\Domain\Repositories\DataRepositoryInterface;
@@ -29,17 +31,17 @@ class GameLogic
         $baseCost = 20;
         $linearIncrease = $totalRooms * 5;
         $totalCost = $baseCost + $linearIncrease;
-        
+
         if ($roomType === 'boss') {
             $totalCost += 30;
         }
-        
+
         return max(5, (int) (ceil($totalCost / 5) * 5)); // Round to nearest 5
     }
 
     public function calculateRoomCapacity(int $roomPosition, int $monsterTier): int
     {
-        $baseCapacity = max(1, $roomPosition) * 2; // Ensure position is at least 1 
+        $baseCapacity = max(1, $roomPosition) * 2; // Ensure position is at least 1
         $tier = max(1, $monsterTier); // Ensure tier is at least 1 to prevent division by zero
         return (int) floor($baseCapacity / $tier);
     }
@@ -100,7 +102,7 @@ class GameLogic
                 break;
             }
         }
-        
+
         return min($tier - 1, 5); // Cap at tier 5
     }
 
@@ -133,7 +135,7 @@ class GameLogic
     {
         $floorMultiplier = 1 + ($floorNumber - 1) * 0.2; // 20% increase per floor
         $bossMultiplier = $isBoss ? 1.5 : 1.0;
-        
+
         return [
             'hp' => (int) ceil($baseStats['hp'] * $floorMultiplier * $bossMultiplier),
             'attack' => (int) ceil($baseStats['attack'] * $floorMultiplier * $bossMultiplier),
@@ -141,11 +143,15 @@ class GameLogic
         ];
     }
 
-    public function validateMonsterPlacement(int $floorNumber, int $roomPosition, string $monsterType, array $existingMonsters): array
-    {
+    public function validateMonsterPlacement(
+        int $floorNumber,
+        int $roomPosition,
+        string $monsterType,
+        array $existingMonsters
+    ): array {
         // Check if adventurers are in dungeon (this would come from game state)
         // For now, assume this check is done elsewhere
-        
+
         $monsterStats = $this->getMonsterStats($monsterType);
         if (empty($monsterStats)) {
             return [

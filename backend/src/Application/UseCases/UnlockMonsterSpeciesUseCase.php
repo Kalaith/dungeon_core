@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -10,7 +12,8 @@ class UnlockMonsterSpeciesUseCase
     public function __construct(
         private GameRepositoryInterface $gameRepo,
         private GameLogic $gameLogic
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId, string $speciesName): array
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Http;
 
 class Request
@@ -11,9 +13,14 @@ class Request
     private array $serverParams;
     private string $method;
     private string $uri;
-
-    public function __construct(array $headers, array $queryParams, array $parsedBody, array $serverParams, string $method, string $uri)
-    {
+    public function __construct(
+        array $headers,
+        array $queryParams,
+        array $parsedBody,
+        array $serverParams,
+        string $method,
+        string $uri
+    ) {
         $this->headers = $headers;
         $this->queryParams = $queryParams;
         $this->parsedBody = $parsedBody;

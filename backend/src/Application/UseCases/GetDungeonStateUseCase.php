@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -10,12 +12,13 @@ class GetDungeonStateUseCase
     public function __construct(
         private GameRepositoryInterface $gameRepo,
         private DungeonRepositoryInterface $dungeonRepo
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId): array
     {
         $game = $this->gameRepo->findBySessionId($sessionId);
-        
+
         if (!$game) {
             return [
                 'floors' => [],
@@ -25,7 +28,7 @@ class GetDungeonStateUseCase
 
         // Get all floors for this game
         $floors = $this->dungeonRepo->getFloorsByGameId($game->getId());
-        
+
         // Get all monsters for this game
         $monsters = $this->dungeonRepo->getMonstersByGameId($game->getId());
 
@@ -41,19 +44,19 @@ class GetDungeonStateUseCase
 
             $roomsData = [];
             foreach ($rooms as $room) {
-                $roomMonsters = array_filter($monsters, function($monster) use ($room) {
+                $roomMonsters = array_filter($monsters, function ($monster) use ($room) {
                     return $monster->getRoomId() === $room->getId();
                 });
-                
+
                 $roomsData[] = [
                     'id' => $room->getId(),
                     'type' => $room->getType(),
                     'position' => $room->getPosition(),
                     'floorNumber' => $floor->getNumber(),
                     'explored' => true, // Default for now
-                    'loot' => 0, // Default for now  
+                    'loot' => 0, // Default for now
                     'roomUpgrade' => null, // Default for now
-                    'monsters' => array_map(function($monster) {
+                    'monsters' => array_map(function ($monster) {
                         return [
                             'id' => $monster->getId(),
                             'type' => $monster->getType(),
@@ -76,7 +79,7 @@ class GetDungeonStateUseCase
 
         return [
             'floors' => $floorsData,
-            'monsters' => array_map(function($monster) {
+            'monsters' => array_map(function ($monster) {
                 return [
                     'id' => $monster->getId(),
                     'type' => $monster->getType(),

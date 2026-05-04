@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -12,12 +14,13 @@ class GetGameStateUseCase
         private GameRepositoryInterface $gameRepo,
         private DungeonRepositoryInterface $dungeonRepo,
         private GameLogic $gameLogic
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId): array
     {
         $game = $this->gameRepo->findBySessionId($sessionId);
-        
+
         if (!$game) {
             // Create new game for session
             $game = $this->gameRepo->create($sessionId);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Controllers;
 
 use DungeonCore\Http\Response;
@@ -36,7 +38,7 @@ class DataController
     {
         try {
             $constants = $this->getGameConstantsUseCase->execute();
-            
+
             $response->getBody()->write(json_encode($constants));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
@@ -49,7 +51,7 @@ class DataController
     {
         try {
             $monsterTypes = $this->getMonsterTypesUseCase->execute();
-            
+
             $response->getBody()->write(json_encode($monsterTypes));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
@@ -62,7 +64,7 @@ class DataController
     {
         try {
             $traits = $this->getMonsterTraitsUseCase->execute();
-            
+
             $response->getBody()->write(json_encode($traits));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
@@ -75,7 +77,7 @@ class DataController
     {
         try {
             $equipment = $this->getEquipmentDataUseCase->execute();
-            
+
             $response->getBody()->write(json_encode($equipment));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
@@ -88,7 +90,7 @@ class DataController
     {
         try {
             $scaling = $this->getFloorScalingUseCase->execute();
-            
+
             $response->getBody()->write(json_encode($scaling));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {

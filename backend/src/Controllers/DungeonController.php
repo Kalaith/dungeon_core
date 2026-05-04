@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Controllers;
 
 use DungeonCore\Application\UseCases\AddRoomUseCase;
@@ -12,13 +14,13 @@ class DungeonController
     public function __construct(
         private AddRoomUseCase $addRoomUseCase,
         private GetDungeonStateUseCase $getDungeonStateUseCase
-    ) {}
+    ) {
+    }
 
     public function getDungeonState(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
         $result = $this->getDungeonStateUseCase->execute($sessionId);
-        
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -27,7 +29,6 @@ class DungeonController
     {
         $sessionId = $this->getSessionId($request);
         $data = $request->getParsedBody();
-        
         $result = $this->addRoomUseCase->execute(
             $sessionId,
             $data['floorNumber'],
@@ -35,7 +36,6 @@ class DungeonController
             $data['position'],
             $data['cost']
         );
-        
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -46,6 +46,7 @@ class DungeonController
         if ($authUser && isset($authUser['id'])) {
             return (string) $authUser['id'];
         }
-        return session_id();
+
+        throw new \RuntimeException('Authenticated user missing from protected dungeon request.');
     }
 }

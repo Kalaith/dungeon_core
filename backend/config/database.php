@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
+use DungeonCore\Core\Environment;
+
 return [
-    'host' => $_ENV['DB_HOST'] ?? 'localhost',
-    'port' => $_ENV['DB_PORT'] ?? 3306,
-    'database' => $_ENV['DB_NAME'] ?? 'dungeon_core',
-    'username' => $_ENV['DB_USER'] ?? 'root',
-    'password' => $_ENV['DB_PASSWORD'] ?? '',
+    'host' => Environment::required('DB_HOST'),
+    'port' => (int) (Environment::optional('DB_PORT') ?? '3306'),
+    'database' => Environment::required('DB_NAME'),
+    'username' => Environment::required('DB_USER'),
+    'password' => Environment::required('DB_PASSWORD'),
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

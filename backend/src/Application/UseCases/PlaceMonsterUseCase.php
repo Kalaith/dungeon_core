@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -12,7 +14,8 @@ class PlaceMonsterUseCase
         private GameRepositoryInterface $gameRepo,
         private DungeonRepositoryInterface $dungeonRepo,
         private GameLogic $gameLogic
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId, int $floorNumber, int $roomPosition, string $monsterType): array
     {
@@ -49,8 +52,13 @@ class PlaceMonsterUseCase
 
         // Validate room capacity using backend logic
         $existingMonsters = $this->dungeonRepo->getRoomMonsters($floorNumber, $roomPosition);
-        $validation = $this->gameLogic->validateMonsterPlacement($floorNumber, $roomPosition, $monsterType, $existingMonsters);
-        
+        $validation = $this->gameLogic->validateMonsterPlacement(
+            $floorNumber,
+            $roomPosition,
+            $monsterType,
+            $existingMonsters
+        );
+
         if (!$validation['valid']) {
             return ['success' => false, 'error' => $validation['error']];
         }
@@ -66,7 +74,7 @@ class PlaceMonsterUseCase
 
         // Determine if this is a boss monster
         $isBoss = $isBossRoom && count($existingMonsters) === 0;
-        
+
         // Scale monster stats server-side
         $scaledStats = $this->gameLogic->scaleMonsterStats($monsterStats, $floorNumber, $isBoss);
 
@@ -85,7 +93,7 @@ class PlaceMonsterUseCase
             $maxHp,
             $isBoss
         );
-        
+
         // Save game state
         $this->gameRepo->save($game);
 

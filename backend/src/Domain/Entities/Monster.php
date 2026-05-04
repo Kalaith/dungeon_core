@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Domain\Entities;
 
 class Monster
@@ -12,15 +14,37 @@ class Monster
         private int $maxHp,
         private bool $alive = true,
         private bool $isBoss = false
-    ) {}
+    ) {
+    }
 
-    public function getId(): int { return $this->id; }
-    public function getRoomId(): int { return $this->roomId; }
-    public function getType(): string { return $this->type; }
-    public function getHp(): int { return $this->hp; }
-    public function getMaxHp(): int { return $this->maxHp; }
-    public function isAlive(): bool { return $this->alive; }
-    public function isBoss(): bool { return $this->isBoss; }
+    public function getId(): int
+    {
+        return $this->id;
+    }
+    public function getRoomId(): int
+    {
+        return $this->roomId;
+    }
+    public function getType(): string
+    {
+        return $this->type;
+    }
+    public function getHp(): int
+    {
+        return $this->hp;
+    }
+    public function getMaxHp(): int
+    {
+        return $this->maxHp;
+    }
+    public function isAlive(): bool
+    {
+        return $this->alive;
+    }
+    public function isBoss(): bool
+    {
+        return $this->isBoss;
+    }
 
     public function takeDamage(int $damage): void
     {

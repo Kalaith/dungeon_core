@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Controllers;
 
 use DungeonCore\Application\UseCases\GetGameStateUseCase;
@@ -24,13 +26,14 @@ class GameController
         private GainMonsterExperienceUseCase $gainMonsterExperienceUseCase,
         private GetAvailableMonstersUseCase $getAvailableMonstersUseCase,
         private UpdateDungeonStatusUseCase $updateDungeonStatusUseCase
-    ) {}
+    ) {
+    }
 
     public function initialize(Request $request, Response $response): Response
     {
         $sessionId = $this->getSessionId($request);
         $result = $this->initializeGameUseCase->execute($sessionId);
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -39,7 +42,7 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $result = $this->getGameStateUseCase->execute($sessionId);
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -48,14 +51,14 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $data = $request->getParsedBody();
-        
+
         $result = $this->placeMonsterUseCase->execute(
             $sessionId,
             $data['floorNumber'],
             $data['roomPosition'],
             $data['monsterType']
         );
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -64,12 +67,12 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $data = $request->getParsedBody();
-        
+
         $result = $this->unlockMonsterSpeciesUseCase->execute(
             $sessionId,
             $data['speciesName']
         );
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -78,13 +81,13 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $data = $request->getParsedBody();
-        
+
         $result = $this->gainMonsterExperienceUseCase->execute(
             $sessionId,
             $data['monsterName'],
             $data['experience']
         );
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -103,7 +106,6 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $data = $request->getParsedBody();
-
         $result = $this->updateDungeonStatusUseCase->execute(
             $sessionId,
             $data['status'] ?? ''
@@ -117,7 +119,7 @@ class GameController
     {
         $sessionId = $this->getSessionId($request);
         $result = $this->resetGameUseCase->execute($sessionId);
-        
+
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -128,6 +130,7 @@ class GameController
         if ($authUser && isset($authUser['id'])) {
             return (string) $authUser['id'];
         }
-        return session_id();
+
+        throw new \RuntimeException('Authenticated user missing from protected game request.');
     }
 }

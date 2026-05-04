@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Domain\Entities;
 
 class Game
@@ -18,17 +20,45 @@ class Game
         private array $speciesExperience = [],
         private array $monsterExperience = [],
         private int $activePartyCount = 0
-    ) {}
+    ) {
+    }
 
-    public function getId(): int { return $this->id; }
-    public function getMana(): int { return $this->mana; }
-    public function getMaxMana(): int { return $this->maxMana; }
-    public function getManaRegen(): int { return $this->manaRegen; }
-    public function getGold(): int { return $this->gold; }
-    public function getSouls(): int { return $this->souls; }
-    public function getDay(): int { return $this->day; }
-    public function getHour(): int { return $this->hour; }
-    public function getStatus(): string { return $this->status; }
+    public function getId(): int
+    {
+        return $this->id;
+    }
+    public function getMana(): int
+    {
+        return $this->mana;
+    }
+    public function getMaxMana(): int
+    {
+        return $this->maxMana;
+    }
+    public function getManaRegen(): int
+    {
+        return $this->manaRegen;
+    }
+    public function getGold(): int
+    {
+        return $this->gold;
+    }
+    public function getSouls(): int
+    {
+        return $this->souls;
+    }
+    public function getDay(): int
+    {
+        return $this->day;
+    }
+    public function getHour(): int
+    {
+        return $this->hour;
+    }
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
 
     public function spendMana(int $amount): bool
     {

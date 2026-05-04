@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Infrastructure\Database\MySQL;
 
 use DungeonCore\Domain\Repositories\EquipmentRepositoryInterface;
@@ -22,7 +24,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
             ORDER BY type, tier
         ");
         $stmt->execute();
-        
+
         $equipment = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $type = $row['type'];
@@ -41,7 +43,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
                 'description' => $row['description']
             ];
         }
-        
+
         return $equipment;
     }
 
@@ -54,7 +56,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
             ORDER BY tier
         ");
         $stmt->execute([$type]);
-        
+
         $equipment = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $equipment[$row['name']] = [
@@ -69,7 +71,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
                 'description' => $row['description']
             ];
         }
-        
+
         return $equipment;
     }
 
@@ -81,12 +83,12 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
             WHERE id = ?
         ");
         $stmt->execute([$id]);
-        
+
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
             return null;
         }
-        
+
         return [
             'id' => $row['id'],
             'name' => $row['name'],
@@ -111,7 +113,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
             ORDER BY et.type, et.tier
         ");
         $stmt->execute([$playerId]);
-        
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -124,7 +126,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
         ");
         $stmt->execute([$playerId, $equipmentTypeId]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($existing) {
             // Update quantity
             $stmt = $this->pdo->prepare("
@@ -155,7 +157,7 @@ class MySQLEquipmentRepository implements EquipmentRepositoryInterface
             )
         ");
         $stmt->execute([$playerId, $equipmentTypeId]);
-        
+
         // Then equip the new item
         $stmt = $this->pdo->prepare("
             UPDATE player_equipment 

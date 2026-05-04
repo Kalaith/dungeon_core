@@ -28,7 +28,7 @@ export const TimeSystem: React.FC = () => {
         clearInterval(timeIntervalRef.current);
       }
     };
-  }, []);
+  }, [advanceTime]);
 
   return null; // This is a system component, no visual rendering
 };

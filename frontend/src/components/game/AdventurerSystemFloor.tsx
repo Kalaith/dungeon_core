@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { fetchGameConstantsData } from '../../api/gameApi';
 import type { AdventurerParty, Adventurer } from '../../types/game';
@@ -26,7 +26,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
   const systemIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Generate adventurer party
-  const generateAdventurerParty = async (): Promise<AdventurerParty> => {
+  const generateAdventurerParty = useCallback(async (): Promise<AdventurerParty> => {
     const gameConstants = await fetchGameConstantsData();
     if (!gameConstants) {
       throw new Error('Failed to load game constants');
@@ -109,10 +109,10 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
     };
 
     return party;
-  };
+  }, [floors.length, hour]);
 
   // Simulate adventurer progression through dungeon
-  const processAdventurerParties = async () => {
+  const processAdventurerParties = useCallback(async () => {
     if (!running || adventurerParties.length === 0) return;
 
     const gameConstants = await fetchGameConstantsData();
@@ -273,10 +273,20 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
         }
       }
     }
-  };
+  }, [
+    addLog,
+    adventurerParties,
+    floors,
+    gainGold,
+    gainSouls,
+    mana,
+    removeAdventurerParty,
+    running,
+    updateAdventurerParty,
+  ]);
 
   // Spawn new adventurer parties
-  const spawnAdventurerParty = async () => {
+  const spawnAdventurerParty = useCallback(async () => {
     if (status !== 'Open' || adventurerParties.length > 0) return;
     if (hour < nextPartySpawn) return;
 
@@ -314,7 +324,15 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
         });
       }
     }
-  };
+  }, [
+    addAdventurerParty,
+    addLog,
+    adventurerParties.length,
+    generateAdventurerParty,
+    hour,
+    nextPartySpawn,
+    status,
+  ]);
 
   // Main system loop
   useEffect(() => {
@@ -351,7 +369,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
         clearInterval(systemIntervalRef.current);
       }
     };
-  }, [running, status, hour, adventurerParties.length]);
+  }, [processAdventurerParties, running, spawnAdventurerParty]);
 
   return null; // This is a system component, no visual rendering
 };

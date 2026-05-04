@@ -14,7 +14,7 @@ import type {
   UpdateDungeonStatusResponse,
 } from './types';
 import type { ResetGameResponse } from './resetTypes';
-import { getActiveAuthToken } from '../stores/authStore';
+import { getActiveAuthToken, WEBHATCHERY_AUTH_STORAGE_KEY } from '../stores/authStore';
 
 class ApiClient {
   private baseUrl: string;
@@ -65,6 +65,9 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        await this.persistLoginUrl(response);
+      }
       console.error('API Error:', response.status, response.statusText);
       throw new Error(`API Error: ${response.status}`);
     }
@@ -156,6 +159,34 @@ class ApiClient {
 
   async getFloorScaling(): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>('/data/floor-scaling');
+  }
+
+  private async persistLoginUrl(response: Response): Promise<void> {
+    try {
+      const payload = (await response.clone().json()) as { login_url?: unknown };
+      if (typeof payload.login_url !== 'string' || payload.login_url.trim() === '') {
+        return;
+      }
+
+      const raw = localStorage.getItem(WEBHATCHERY_AUTH_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      const state = parsed?.state ?? {};
+      localStorage.setItem(
+        WEBHATCHERY_AUTH_STORAGE_KEY,
+        JSON.stringify({
+          ...parsed,
+          state: {
+            ...state,
+            loginUrl: payload.login_url,
+          },
+        })
+      );
+      window.dispatchEvent(
+        new CustomEvent('webhatchery:login-required', { detail: { loginUrl: payload.login_url } })
+      );
+    } catch (error) {
+      console.warn('Failed to persist login URL from 401 response', error);
+    }
   }
 }
 

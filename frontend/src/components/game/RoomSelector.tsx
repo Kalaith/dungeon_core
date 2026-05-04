@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useBackendGameStore } from '../../stores/backendGameStore';
 import { fetchGameConstantsData, getRoomCost, getDungeonState } from '../../api/gameApi';
 import type { DungeonFloor, Room, GameConstants } from '../../types/game';
@@ -39,7 +39,7 @@ export const RoomSelector: React.FC = () => {
   const totalFloors = floors.length;
 
   // Calculate the cost for the next room
-  const getNextRoomCost = async () => {
+  const getNextRoomCost = useCallback(async () => {
     if (!gameConstants) return 0;
 
     const deepestFloor = floors.find(f => f.isDeepest);
@@ -63,7 +63,7 @@ export const RoomSelector: React.FC = () => {
       const roomType = nextPosition === gameConstants.MAX_ROOMS_PER_FLOOR ? 'boss' : 'normal';
       return await getRoomCost(totalRoomCount, roomType);
     }
-  };
+  }, [floors, gameConstants]);
 
   // Update room cost when dependencies change
   useEffect(() => {
@@ -71,7 +71,7 @@ export const RoomSelector: React.FC = () => {
       setRoomCost(await getNextRoomCost());
     };
     updateRoomCost();
-  }, [floors, gameConstants]);
+  }, [getNextRoomCost]);
 
   // Update display message
   useEffect(() => {

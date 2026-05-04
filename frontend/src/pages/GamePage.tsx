@@ -35,11 +35,7 @@ export function GamePage() {
   }, []);
 
   const resolvedLoginUrl = useMemo(() => {
-    const baseLoginUrl =
-      loginUrl ||
-      import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL ||
-      import.meta.env.VITE_LOGIN_URL ||
-      '';
+    const baseLoginUrl = loginUrl;
 
     if (!baseLoginUrl) {
       return '';
@@ -63,13 +59,18 @@ export function GamePage() {
         const frontpageToken = getFrontpageToken();
 
         if (requestedGuestLink && frontpageToken) {
+          const guestSession = getStoredGuestSession();
+          if (!guestSession?.token) {
+            throw new Error('Guest session is missing');
+          }
+
           const response = await fetch(`${baseApiUrl}/auth/link-guest`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${frontpageToken}`,
             },
-            body: JSON.stringify({ guest_user_id: requestedGuestLink }),
+            body: JSON.stringify({ guest_token: guestSession.token }),
           });
           const data = (await response.json()) as { data?: { user?: typeof user } };
           if (!response.ok || !data.data?.user) {
@@ -122,6 +123,14 @@ export function GamePage() {
           return;
         }
 
+        const loginInfoResponse = await fetch(`${baseApiUrl}/auth/login-info`);
+        const loginInfo = (await loginInfoResponse.json()) as {
+          data?: { login_url?: string };
+        };
+        if (loginInfoResponse.ok && loginInfo.data?.login_url) {
+          setLoginUrl(loginInfo.data.login_url);
+        }
+
         setAuthReady(true);
       } catch (bootstrapError) {
         console.error('Failed to initialize auth session:', bootstrapError);
@@ -133,7 +142,7 @@ export function GamePage() {
     };
 
     bootstrapAuth();
-  }, [baseApiUrl, login, logout]);
+  }, [baseApiUrl, login, logout, setLoginUrl]);
 
   useEffect(() => {
     const handleLoginRequired = (event: Event) => {

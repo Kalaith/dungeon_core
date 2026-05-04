@@ -1,15 +1,17 @@
 import axios from 'axios';
 import { getActiveAuthToken, WEBHATCHERY_AUTH_STORAGE_KEY } from '../stores/authStore';
 
-// Determine the base URL from the environment or use a relative path
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+if (!BASE_URL || BASE_URL.trim().length === 0) {
+    throw new Error('VITE_API_BASE_URL is required');
+}
 
 /**
  * Standardized Web Hatchery Axios Instance
  * Automatically handles Bearer tokens and 401 Unauthorized redirects.
  */
 export const apiClient = axios.create({
-    baseURL: BASE_URL,
+    baseURL: BASE_URL.replace(/\/$/, ''),
     headers: {
         'Content-Type': 'application/json',
     },
@@ -45,8 +47,7 @@ apiClient.interceptors.response.use(
         // Intercept 401 Unauthorized and redirect to central login
         if (error.response?.status === 401) {
             const loginUrl =
-                error.response?.data?.login_url ||
-                import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL;
+                error.response?.data?.login_url;
 
             if (loginUrl) {
                 try {

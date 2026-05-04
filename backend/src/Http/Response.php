@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Http;
 
 class Response
@@ -7,7 +9,6 @@ class Response
     private int $status = 200;
     private array $headers = [];
     private Body $body;
-
     public function __construct()
     {
         $this->body = new Body();

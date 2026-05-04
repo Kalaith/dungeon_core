@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Application\UseCases;
 
 use DungeonCore\Domain\Repositories\GameRepositoryInterface;
@@ -10,7 +12,8 @@ class AddRoomUseCase
     public function __construct(
         private GameRepositoryInterface $gameRepo,
         private DungeonRepositoryInterface $dungeonRepo
-    ) {}
+    ) {
+    }
 
     public function execute(string $sessionId, int $floorNumber, string $roomType, int $position, int $cost): array
     {
@@ -36,7 +39,7 @@ class AddRoomUseCase
 
         // Add room
         $roomId = $this->dungeonRepo->addRoom($game->getId(), $floorNumber, $roomType, $position);
-        
+
         // Save game state
         $this->gameRepo->save($game);
 

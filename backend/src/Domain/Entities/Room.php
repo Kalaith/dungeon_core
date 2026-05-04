@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DungeonCore\Domain\Entities;
 
 class Room
@@ -9,7 +11,8 @@ class Room
         private int $floorId,
         private string $type,
         private int $position
-    ) {}
+    ) {
+    }
 
     public function getId(): int
     {

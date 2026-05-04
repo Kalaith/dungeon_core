@@ -39,7 +39,13 @@ export const getFrontpageToken = (): string | null => {
             return null;
         }
 
-        const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
+        const parsed = JSON.parse(raw) as {
+            state?: { token?: string | null; user?: AuthUser | null };
+        };
+        if (parsed.state?.user?.is_guest === true) {
+            return null;
+        }
+
         return parsed.state?.token ?? null;
     } catch {
         return null;
@@ -68,12 +74,12 @@ export const clearGuestSession = (): void => {
 };
 
 export const getActiveAuthToken = (): string | null => {
-    const guestSession = getStoredGuestSession();
-    if (guestSession?.token) {
-        return guestSession.token;
+    const frontpageToken = getFrontpageToken();
+    if (frontpageToken) {
+        return frontpageToken;
     }
 
-    return getFrontpageToken();
+    return getStoredGuestSession()?.token ?? null;
 };
 
 export const useAuthStore = create<AuthState>()(
