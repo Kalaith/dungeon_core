@@ -19,7 +19,8 @@ class Game
         private array $unlockedSpecies = [],
         private array $speciesExperience = [],
         private array $monsterExperience = [],
-        private int $activePartyCount = 0
+        private int $activePartyCount = 0,
+        private int $coreIntegrity = 100
     ) {
     }
 
@@ -177,6 +178,21 @@ class Game
     public function getActivePartyCount(): int
     {
         return $this->activePartyCount;
+    }
+
+    public function getCoreIntegrity(): int
+    {
+        return $this->coreIntegrity;
+    }
+
+    public function setCoreIntegrity(int $coreIntegrity): void
+    {
+        $this->coreIntegrity = max(0, min(100, $coreIntegrity));
+    }
+
+    public function isCoreDestroyed(): bool
+    {
+        return $this->coreIntegrity <= 0;
     }
 
     public function hasActiveAdventurers(): bool

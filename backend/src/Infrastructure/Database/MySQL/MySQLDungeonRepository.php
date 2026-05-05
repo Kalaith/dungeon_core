@@ -35,7 +35,7 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         // Add room
         $stmt = $this->connection->prepare('INSERT INTO rooms (floor_id, type, position) VALUES (?, ?, ?)');
         $stmt->execute([$floorId, $roomType, $position]);
-        $roomId = $this->connection->lastInsertId();
+        $roomId = (int) $this->connection->lastInsertId();
         error_log("Created room ID: $roomId with type: $roomType, position: $position");
         return $roomId;
     }
@@ -54,12 +54,12 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         while ($data = $stmt->fetch()) {
             error_log("Found room: " . json_encode($data));
             $rooms[] = [
-                'id' => $data['id'],
-                'type' => $data['type'],
-                'position' => $data['position'],
-                'floor_number' => $data['floor_number'],
-                'explored' => $data['explored'] ?? false,
-                'loot' => $data['loot'] ?? 0
+                'id' => (int) $data['id'],
+                'type' => (string) $data['type'],
+                'position' => (int) $data['position'],
+                'floor_number' => (int) $data['floor_number'],
+                'explored' => (bool) ($data['explored'] ?? false),
+                'loot' => (int) ($data['loot'] ?? 0)
             ];
         }
 
@@ -67,25 +67,26 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         return $rooms;
     }
 
-    public function getRoom(int $floorNumber, int $roomPosition): ?array
+    public function getRoom(int $gameId, int $floorNumber, int $roomPosition): ?array
     {
         $stmt = $this->connection->prepare('SELECT r.*, f.number as floor_number
              FROM rooms r
              JOIN floors f ON r.floor_id = f.id
-             WHERE f.number = ? AND r.position = ?');
-        $stmt->execute([$floorNumber, $roomPosition]);
+             JOIN dungeons d ON f.dungeon_id = d.id
+             WHERE d.player_id = ? AND f.number = ? AND r.position = ?');
+        $stmt->execute([$gameId, $floorNumber, $roomPosition]);
         $data = $stmt->fetch();
         if (!$data) {
             return null;
         }
 
         return [
-            'id' => $data['id'],
-            'type' => $data['type'],
-            'position' => $data['position'],
-            'floor_number' => $data['floor_number'],
-            'explored' => $data['explored'] ?? false,
-            'loot' => $data['loot'] ?? 0
+            'id' => (int) $data['id'],
+            'type' => (string) $data['type'],
+            'position' => (int) $data['position'],
+            'floor_number' => (int) $data['floor_number'],
+            'explored' => (bool) ($data['explored'] ?? false),
+            'loot' => (int) ($data['loot'] ?? 0)
         ];
     }
 
@@ -97,7 +98,7 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
 // Convert boolean to integer for MySQL
         $isBossInt = $isBoss ? 1 : 0;
         $stmt->execute([$roomId, $monsterType, $hp, $maxHp, $isBossInt]);
-        $id = $this->connection->lastInsertId();
+        $id = (int) $this->connection->lastInsertId();
         return new Monster($id, $roomId, $monsterType, $hp, $maxHp, true, $isBoss);
     }
 
@@ -112,36 +113,37 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         $monsters = [];
         while ($data = $stmt->fetch()) {
             $monsters[] = new Monster(
-                $data['id'],
-                $data['room_id'],
-                $data['type'],
-                $data['hp'],
-                $data['max_hp'],
-                $data['alive'],
-                $data['is_boss']
+                (int) $data['id'],
+                (int) $data['room_id'],
+                (string) $data['type'],
+                (int) $data['hp'],
+                (int) $data['max_hp'],
+                (bool) $data['alive'],
+                (bool) $data['is_boss']
             );
         }
 
         return $monsters;
     }
 
-    public function getRoomMonsters(int $floorNumber, int $roomPosition): array
+    public function getRoomMonsters(int $gameId, int $floorNumber, int $roomPosition): array
     {
         $stmt = $this->connection->prepare('SELECT m.* FROM monsters m
              JOIN rooms r ON m.room_id = r.id
              JOIN floors f ON r.floor_id = f.id
-             WHERE f.number = ? AND r.position = ?');
-        $stmt->execute([$floorNumber, $roomPosition]);
+             JOIN dungeons d ON f.dungeon_id = d.id
+             WHERE d.player_id = ? AND f.number = ? AND r.position = ?');
+        $stmt->execute([$gameId, $floorNumber, $roomPosition]);
         $monsters = [];
         while ($data = $stmt->fetch()) {
             $monsters[] = new Monster(
-                $data['id'],
-                $data['room_id'],
-                $data['type'],
-                $data['hp'],
-                $data['max_hp'],
-                $data['alive'],
-                $data['is_boss']
+                (int) $data['id'],
+                (int) $data['room_id'],
+                (string) $data['type'],
+                (int) $data['hp'],
+                (int) $data['max_hp'],
+                (bool) $data['alive'],
+                (bool) $data['is_boss']
             );
         }
 
@@ -164,7 +166,7 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         $stmt = $this->connection->prepare('SELECT position FROM rooms WHERE id = ?');
         $stmt->execute([$roomId]);
         $position = $stmt->fetchColumn();
-        return $position * 2;
+        return (int) $position * 2;
 // Room capacity = position * 2
     }
 
@@ -172,21 +174,35 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
     {
         $stmt = $this->connection->prepare('SELECT COUNT(*) FROM monsters WHERE room_id = ?');
         $stmt->execute([$roomId]);
-        return $stmt->fetchColumn();
+        return (int) $stmt->fetchColumn();
     }
 
     private function getDungeonId(int $gameId): int
     {
-        $stmt = $this->connection->prepare('SELECT id FROM dungeons WHERE player_id = ?');
-        $stmt->execute([$gameId]);
-        $dungeonId = $stmt->fetchColumn();
-        if (!$dungeonId) {
-            $stmt = $this->connection->prepare('INSERT INTO dungeons (player_id) VALUES (?)');
-            $stmt->execute([$gameId]);
-            $dungeonId = $this->connection->lastInsertId();
+        $lockName = "dungeon_core_dungeon_$gameId";
+        $stmt = $this->connection->prepare('SELECT GET_LOCK(?, 5)');
+        $stmt->execute([$lockName]);
+        if ((int) $stmt->fetchColumn() !== 1) {
+            throw new Exception("Could not lock dungeon creation for player ID: $gameId");
         }
 
-        return $dungeonId;
+        try {
+            $stmt = $this->connection->prepare(
+                'SELECT id FROM dungeons WHERE player_id = ? ORDER BY id LIMIT 1'
+            );
+            $stmt->execute([$gameId]);
+            $dungeonId = $stmt->fetchColumn();
+            if (!$dungeonId) {
+                $stmt = $this->connection->prepare('INSERT INTO dungeons (player_id) VALUES (?)');
+                $stmt->execute([$gameId]);
+                $dungeonId = $this->connection->lastInsertId();
+            }
+
+            return (int) $dungeonId;
+        } finally {
+            $stmt = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
+            $stmt->execute([$lockName]);
+        }
     }
 
     private function getFloorId(int $dungeonId, int $floorNumber): int
@@ -200,44 +216,49 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
             $floorId = $this->connection->lastInsertId();
         }
 
-        return $floorId;
+        return (int) $floorId;
     }
 
     public function resetGame(int $gameId): void
     {
         error_log("Resetting game for player ID: $gameId");
+        $lockName = "dungeon_core_dungeon_$gameId";
+        $stmt = $this->connection->prepare('SELECT GET_LOCK(?, 5)');
+        $stmt->execute([$lockName]);
+        if ((int) $stmt->fetchColumn() !== 1) {
+            throw new Exception("Could not lock dungeon reset for player ID: $gameId");
+        }
+
         try {
         // Start transaction to ensure all or nothing
             $this->connection->beginTransaction();
-        // Get dungeon ID first
-            $stmt = $this->connection->prepare('SELECT id FROM dungeons WHERE player_id = ?');
-            $stmt->execute([$gameId]);
-            $dungeonId = $stmt->fetchColumn();
-            if ($dungeonId) {
-        // Delete all monsters (will cascade through rooms)
-                $stmt = $this->connection->prepare('DELETE m FROM monsters m
-                     JOIN rooms r ON m.room_id = r.id
-                     JOIN floors f ON r.floor_id = f.id
-                     WHERE f.dungeon_id = ?');
-                $stmt->execute([$dungeonId]);
-                error_log("Deleted monsters for dungeon ID: $dungeonId");
-        // Delete all rooms (will cascade through floors)
-                    $stmt = $this->connection->prepare('DELETE r FROM rooms r
-                     JOIN floors f ON r.floor_id = f.id
-                     WHERE f.dungeon_id = ?');
-                $stmt->execute([$dungeonId]);
-                error_log("Deleted rooms for dungeon ID: $dungeonId");
-        // Delete all floors
-                    $stmt = $this->connection->prepare('DELETE FROM floors WHERE dungeon_id = ?');
-                $stmt->execute([$dungeonId]);
-                error_log("Deleted floors for dungeon ID: $dungeonId");
-        // Delete the dungeon itself
-                    $stmt = $this->connection->prepare('DELETE FROM dungeons WHERE id = ?');
-                $stmt->execute([$dungeonId]);
-                error_log("Deleted dungeon ID: $dungeonId");
-            }
 
-            // Delete all adventurer parties and their adventurers (cascades)
+            // Delete all dungeon structures for this player, including stale duplicate dungeons.
+            $stmt = $this->connection->prepare('DELETE m FROM monsters m
+                 JOIN rooms r ON m.room_id = r.id
+                 JOIN floors f ON r.floor_id = f.id
+                 JOIN dungeons d ON f.dungeon_id = d.id
+                 WHERE d.player_id = ?');
+            $stmt->execute([$gameId]);
+            error_log("Deleted monsters for player ID: $gameId");
+
+            $stmt = $this->connection->prepare('DELETE r FROM rooms r
+                 JOIN floors f ON r.floor_id = f.id
+                 JOIN dungeons d ON f.dungeon_id = d.id
+                 WHERE d.player_id = ?');
+            $stmt->execute([$gameId]);
+            error_log("Deleted rooms for player ID: $gameId");
+
+            $stmt = $this->connection->prepare('DELETE f FROM floors f
+                 JOIN dungeons d ON f.dungeon_id = d.id
+                 WHERE d.player_id = ?');
+            $stmt->execute([$gameId]);
+            error_log("Deleted floors for player ID: $gameId");
+
+            $stmt = $this->connection->prepare('DELETE FROM dungeons WHERE player_id = ?');
+            $stmt->execute([$gameId]);
+            error_log("Deleted dungeons for player ID: $gameId");
+
             $stmt = $this->connection->prepare('DELETE FROM adventurer_parties WHERE player_id = ?');
             $stmt->execute([$gameId]);
             error_log("Deleted adventurer parties for player ID: $gameId");
@@ -247,6 +268,9 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
             $this->connection->rollBack();
             error_log("Failed to reset game for player ID $gameId: " . $e->getMessage());
             throw $e;
+        } finally {
+            $stmt = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
+            $stmt->execute([$lockName]);
         }
     }
 
@@ -260,7 +284,11 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         $stmt->execute([$dungeonId]);
         $floors = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $floors[] = new \DungeonCore\Domain\Entities\Floor($row['id'], $row['dungeon_id'], $row['number']);
+            $floors[] = new \DungeonCore\Domain\Entities\Floor(
+                (int) $row['id'],
+                (int) $row['dungeon_id'],
+                (int) $row['number']
+            );
         }
 
         return $floors;
@@ -275,10 +303,10 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
         $rooms = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $rooms[] = new \DungeonCore\Domain\Entities\Room(
-                $row['id'],
-                $row['floor_id'],
-                $row['type'],
-                $row['position']
+                (int) $row['id'],
+                (int) $row['floor_id'],
+                (string) $row['type'],
+                (int) $row['position']
             );
         }
 
@@ -289,5 +317,10 @@ class MySQLDungeonRepository implements DungeonRepositoryInterface
     {
         // This method already exists as getMonsters, but let's create an alias for clarity
         return $this->getMonsters($gameId);
+    }
+
+    public function getConnection(): PDO
+    {
+        return $this->connection;
     }
 }

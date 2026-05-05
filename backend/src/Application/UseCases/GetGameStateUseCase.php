@@ -50,6 +50,8 @@ class GetGameStateUseCase
                 'monsterExperience' => $game->getMonsterExperienceMap(),
                 'activeAdventurerParties' => $game->getActivePartyCount(),
                 'canModifyDungeon' => $game->canModifyDungeon(),
+                'coreIntegrity' => $game->getCoreIntegrity(),
+                'coreDestroyed' => $game->isCoreDestroyed(),
                 'speciesProgress' => $speciesProgress
             ]
         ];

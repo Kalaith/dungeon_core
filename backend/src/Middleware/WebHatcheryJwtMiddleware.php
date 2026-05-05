@@ -66,12 +66,11 @@ class WebHatcheryJwtMiddleware
 
     private function unauthorized(Response $response, string $message): Response
     {
-        $loginUrl = Environment::required('WEB_HATCHERY_LOGIN_URL');
         $payload = [
             'success' => false,
             'error' => 'Authentication required',
             'message' => $message,
-            'login_url' => $loginUrl
+            'login_url' => Environment::optional('WEB_HATCHERY_LOGIN_URL') ?? '/'
         ];
         $response->getBody()->write(json_encode($payload));
         return $response

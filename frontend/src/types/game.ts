@@ -100,6 +100,8 @@ export interface AdventurerParty {
   loot: number;
   entryTime: number;
   targetFloor: number; // How deep they plan to go
+  boredom?: number; // 0-100, rises when rooms are empty or unrewarding
+  roomTicks?: number; // Ticks spent in the current room
 }
 
 export interface Equipment {

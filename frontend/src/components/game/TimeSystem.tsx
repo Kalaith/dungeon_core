@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { fetchGameConstantsData } from '../../api/gameApi';
+import { requirePositiveInterval } from '../../utils/gameConstants';
 
 export const TimeSystem: React.FC = () => {
   const { advanceTime } = useGameStore();
@@ -16,9 +17,10 @@ export const TimeSystem: React.FC = () => {
         console.error('Failed to load game constants');
         return;
       }
+      const intervalMs = requirePositiveInterval(gameConstants, 'TIME_ADVANCE_INTERVAL');
       timeIntervalRef.current = setInterval(() => {
         advanceTime();
-      }, gameConstants.TIME_ADVANCE_INTERVAL);
+      }, intervalMs);
     };
 
     setupInterval();

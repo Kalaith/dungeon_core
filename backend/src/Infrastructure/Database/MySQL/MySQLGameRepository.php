@@ -59,6 +59,10 @@ class MySQLGameRepository implements GameRepositoryInterface
             $setParts[] = 'monster_experience = ?';
             $params[] = json_encode($game->getMonsterExperienceMap());
         }
+        if ($this->hasPlayerColumn('core_integrity')) {
+            $setParts[] = 'core_integrity = ?';
+            $params[] = $game->getCoreIntegrity();
+        }
 
         $params[] = $game->getId();
         $sql = 'UPDATE players SET ' . implode(', ', $setParts) . ' WHERE id = ?';
@@ -86,20 +90,28 @@ class MySQLGameRepository implements GameRepositoryInterface
             $values[] = '?';
             $params[] = '{}';
         }
+        if ($this->hasPlayerColumn('core_integrity')) {
+            $columns[] = 'core_integrity';
+            $values[] = '?';
+            $params[] = 100;
+        }
+        if ($this->hasPlayerColumn('last_advanced_at')) {
+            $columns[] = 'last_advanced_at';
+            $values[] = 'NOW(6)';
+        }
 
         $sql = sprintf('INSERT INTO players (%s) VALUES (%s)', implode(', ', $columns), implode(', ', $values));
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
-        $id = $this->connection->lastInsertId();
-        return new Game($id, 50, 100, 1, 100, 0, 1, 6, 'Open', [], [], [], 0);
+        $id = (int) $this->connection->lastInsertId();
+        return new Game($id, 50, 100, 1, 100, 0, 1, 6, 'Open', [], [], [], 0, 100);
     }
 
     public function resetGame(int $gameId): void
     {
         error_log("Resetting player state for game ID: $gameId");
 
-        $stmt = $this->connection->prepare(
-            'UPDATE players SET 
+        $sql = 'UPDATE players SET 
                 mana = 50, 
                 max_mana = 100, 
                 mana_regen = 1, 
@@ -107,9 +119,14 @@ class MySQLGameRepository implements GameRepositoryInterface
                 souls = 0, 
                 day = 1, 
                 hour = 6, 
-                status = "Open" 
-             WHERE id = ?'
-        );
+                status = "Open",
+                core_integrity = 100';
+        if ($this->hasPlayerColumn('last_advanced_at')) {
+            $sql .= ', last_advanced_at = NOW(6)';
+        }
+        $sql .= ' WHERE id = ?';
+
+        $stmt = $this->connection->prepare($sql);
         $stmt->execute([$gameId]);
 
         error_log("Successfully reset player state for game ID: $gameId");
@@ -171,19 +188,20 @@ class MySQLGameRepository implements GameRepositoryInterface
         }
 
         $game = new Game(
-            $data['id'],
-            $data['mana'],
-            $data['max_mana'],
-            $data['mana_regen'],
-            $data['gold'],
-            $data['souls'],
-            $data['day'],
-            $data['hour'],
-            $data['status'],
+            (int) $data['id'],
+            (int) $data['mana'],
+            (int) $data['max_mana'],
+            (int) $data['mana_regen'],
+            (int) $data['gold'],
+            (int) $data['souls'],
+            (int) $data['day'],
+            (int) $data['hour'],
+            (string) $data['status'],
             $unlockedSpecies,
             $speciesExperience,
             $monsterExperience,
-            0
+            0,
+            isset($data['core_integrity']) ? (int) $data['core_integrity'] : 100
         );
 
         $stmt = $this->connection->prepare(

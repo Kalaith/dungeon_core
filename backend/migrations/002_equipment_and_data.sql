@@ -157,7 +157,11 @@ CREATE TABLE game_constants (
 INSERT INTO game_constants (name, value_int, description) VALUES
 ('MAX_ROOMS_PER_FLOOR', 5, 'Maximum number of rooms per floor'),
 ('MAX_LOG_ENTRIES', 50, 'Maximum number of log entries to keep'),
+('BASE_ROOM_COST', 20, 'Base mana cost to build a room'),
+('BOSS_ROOM_EXTRA_COST', 50, 'Additional mana cost for boss rooms'),
 ('BASE_MANA_REGEN', 1, 'Base mana regeneration per turn'),
+('MANA_REGEN_INTERVAL', 1000, 'Mana regeneration interval in milliseconds'),
+('TIME_ADVANCE_INTERVAL', 3000, 'Gameplay tick interval in milliseconds'),
 ('CORE_ROOM_MANA_BONUS', 2, 'Mana bonus from core room per floor'),
 ('FLOOR_COMPLETE_BONUS', 10, 'Bonus for completing a floor'),
 ('BOSS_DEFEAT_BONUS', 25, 'Bonus for defeating a boss'),
@@ -166,11 +170,20 @@ INSERT INTO game_constants (name, value_int, description) VALUES
 ('DEEP_FLOOR_THRESHOLD', 10, 'Floor number when deep floors start'),
 ('PRESTIGE_THRESHOLD', 20, 'Floor number when prestige becomes available'),
 ('MAX_MONSTER_LEVEL', 100, 'Maximum level for monsters'),
+('MAX_PARTY_SIZE', 4, 'Maximum adventurer party size'),
+('MIN_PARTY_SIZE', 2, 'Minimum adventurer party size'),
+('RETREAT_THRESHOLD', 2, 'Casualties before a party retreats'),
 ('TRAIT_UNLOCK_COST', 500, 'Cost to unlock new traits'),
 ('SPECIES_UNLOCK_COST', 1000, 'Cost to unlock new species');
 
 INSERT INTO game_constants (name, value_float, description) VALUES
-('ROOM_UPGRADE_COST_MULTIPLIER', 1.5, 'Multiplier for room upgrade costs');
+('ADVENTURER_SPAWN_CHANCE', 0.05, 'Chance for a party to spawn on an eligible tick'),
+('BOSS_ROOM_LOOT_MULTIPLIER', 2.0, 'Loot multiplier for boss rooms'),
+('BOSS_STAT_MULTIPLIER', 2.0, 'Stat multiplier for boss monsters'),
+('BOSS_ROOM_COST_MULTIPLIER', 2.0, 'Cost multiplier for boss rooms'),
+('ROOM_UPGRADE_COST_MULTIPLIER', 1.5, 'Multiplier for room upgrade costs'),
+('LEVEL_SCALING_FORMULA', 1.0, 'Base level scaling factor'),
+('RETREAT_CHANCE_UNDERLEVELED', 0.3, 'Retreat chance for underleveled adventurers');
 
 -- Floor scaling table
 CREATE TABLE floor_scaling (

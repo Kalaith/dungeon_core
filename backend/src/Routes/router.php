@@ -44,6 +44,7 @@ return function (
         [WebHatcheryJwtMiddleware::class]
     );
     $router->post($api . '/game/status', [$gameController, 'updateStatus'], [WebHatcheryJwtMiddleware::class]);
+    $router->post($api . '/game/advance', [$gameController, 'advanceGameplay'], [WebHatcheryJwtMiddleware::class]);
 // Dungeon routes (protected)
     $router->get($api . '/dungeon/state', [$dungeonController, 'getDungeonState'], [WebHatcheryJwtMiddleware::class]);
     $router->post($api . '/dungeon/add-room', [$dungeonController, 'addRoom'], [WebHatcheryJwtMiddleware::class]);

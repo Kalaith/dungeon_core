@@ -37,7 +37,12 @@ final class Environment
                 $key = trim($key);
                 $value = trim(trim($value), "\"'");
 
-                if ($key === '' || getenv($key) !== false || isset($_ENV[$key]) || isset($_SERVER[$key])) {
+                if ($key === '') {
+                    continue;
+                }
+
+                $existingValue = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+                if (is_string($existingValue) && trim($existingValue) !== '') {
                     continue;
                 }
 

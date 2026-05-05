@@ -103,9 +103,11 @@ class InitializeGameUseCase
                 'unlockedMonsterSpecies' => $game->getUnlockedSpecies(),
                 'speciesExperience' => $game->getSpeciesExperience(),
                 'monsterExperience' => $game->getMonsterExperienceMap(),
-                'activeAdventurerParties' => $game->getActivePartyCount(),
-                'canModifyDungeon' => $game->canModifyDungeon(),
-                'speciesProgress' => $speciesProgress,
+            'activeAdventurerParties' => $game->getActivePartyCount(),
+            'canModifyDungeon' => $game->canModifyDungeon(),
+            'coreIntegrity' => $game->getCoreIntegrity(),
+            'coreDestroyed' => $game->isCoreDestroyed(),
+            'speciesProgress' => $speciesProgress,
                 'log' => [
                     [
                         'message' => 'Welcome to Dungeon Core Simulator v1.2!',

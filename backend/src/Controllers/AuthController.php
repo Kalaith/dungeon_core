@@ -22,7 +22,7 @@ class AuthController
         $response->getBody()->write(json_encode([
             'success' => true,
             'data' => [
-                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL'),
+                'login_url' => self::loginUrl(),
             ],
         ]));
         return $response->withHeader('Content-Type', 'application/json');
@@ -36,7 +36,7 @@ class AuthController
                 'success' => false,
                 'error' => 'Authentication required',
                 'message' => 'Unauthorized',
-                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL')
+                'login_url' => self::loginUrl()
             ]));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
@@ -95,7 +95,7 @@ class AuthController
                 'success' => false,
                 'error' => 'Authentication required',
                 'message' => 'Unauthorized',
-                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL'),
+                'login_url' => self::loginUrl(),
             ]));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
@@ -159,5 +159,10 @@ class AuthController
             'auth_type' => $authUser['auth_type'] ?? 'frontpage',
             'is_guest' => (bool) ($authUser['is_guest'] ?? false),
         ];
+    }
+
+    private static function loginUrl(): string
+    {
+        return Environment::optional('WEB_HATCHERY_LOGIN_URL') ?? '/';
     }
 }

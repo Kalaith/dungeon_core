@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useBackendGameStore } from '../../stores/backendGameStore';
 import { fetchGameConstantsData } from '../../api/gameApi';
+import { requirePositiveInterval } from '../../utils/gameConstants';
 
 export const GameControls: React.FC = () => {
   const { speed, status, setSpeed, setStatus, advanceTime, respawnMonsters, adventurerParties } =
@@ -11,6 +12,8 @@ export const GameControls: React.FC = () => {
     updateStatus,
     gameState: backendGameState,
   } = useBackendGameStore();
+  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const timeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-advance time
@@ -21,9 +24,10 @@ export const GameControls: React.FC = () => {
       }
       const gameConstants = await fetchGameConstantsData();
       if (gameConstants) {
+        const intervalMs = requirePositiveInterval(gameConstants, 'TIME_ADVANCE_INTERVAL');
         timeIntervalRef.current = setInterval(() => {
           advanceTime();
-        }, gameConstants.TIME_ADVANCE_INTERVAL / speed);
+        }, intervalMs / speed);
       }
     };
 
@@ -47,7 +51,10 @@ export const GameControls: React.FC = () => {
       return;
     }
 
-    const targetStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
+    const activeBackendParties =
+      backendGameState?.activeAdventurerParties ?? adventurerParties.length;
+    const targetStatus =
+      currentStatus === 'Open' ? (activeBackendParties > 0 ? 'Closing' : 'Closed') : 'Open';
     setStatus(targetStatus as typeof status);
     const success = await updateStatus(targetStatus);
     if (!success) {
@@ -61,13 +68,18 @@ export const GameControls: React.FC = () => {
   };
 
   const handleResetGame = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to reset the game? This will delete all progress and cannot be undone.'
-      )
-    ) {
+    if (!isConfirmingReset) {
+      setIsConfirmingReset(true);
+      return;
+    }
+
+    setIsResetting(true);
+    try {
       await resetBackendGame();
-      // No need to reload the page - the backend reset handles everything
+      window.dispatchEvent(new Event('dungeon-core:rooms-changed'));
+      setIsConfirmingReset(false);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -144,13 +156,35 @@ export const GameControls: React.FC = () => {
         Respawn Monsters
       </button>
 
-      <button
-        className="btn px-4 py-2 rounded text-white transition-colors bg-red-600 hover:bg-red-700"
-        onClick={handleResetGame}
-        title="Reset game and clear all progress"
-      >
-        Reset Game
-      </button>
+      {isConfirmingReset ? (
+        <div className="flex items-center gap-2 rounded border border-red-400/40 bg-red-950/50 px-2 py-1">
+          <span className="text-sm text-red-100">Reset current session?</span>
+          <button
+            className="btn px-4 py-2 rounded text-white transition-colors bg-red-600 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleResetGame}
+            disabled={isResetting}
+            title="Confirm reset"
+          >
+            {isResetting ? 'Resetting...' : 'Confirm'}
+          </button>
+          <button
+            className="btn px-4 py-2 rounded text-white transition-colors bg-gray-600 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => setIsConfirmingReset(false)}
+            disabled={isResetting}
+            title="Cancel reset"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          className="btn px-4 py-2 rounded text-white transition-colors bg-red-600 hover:bg-red-700"
+          onClick={handleResetGame}
+          title="Reset game and clear all progress"
+        >
+          Reset Game
+        </button>
+      )}
 
       <div className="flex items-center gap-2 text-sm text-gray-300">
         <span>Active Parties: {activeBackendParties}</span>

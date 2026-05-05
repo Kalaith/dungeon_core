@@ -31,6 +31,7 @@ class GetDungeonStateUseCase
 
         // Get all monsters for this game
         $monsters = $this->dungeonRepo->getMonstersByGameId($game->getId());
+        $adventurerParties = $this->getAdventurerParties($game->getId());
 
         // Structure the data
         $floorsData = [];
@@ -79,6 +80,7 @@ class GetDungeonStateUseCase
 
         return [
             'floors' => $floorsData,
+            'adventurerParties' => $adventurerParties,
             'monsters' => array_map(function ($monster) {
                 return [
                     'id' => $monster->getId(),
@@ -91,5 +93,76 @@ class GetDungeonStateUseCase
                 ];
             }, $monsters)
         ];
+    }
+
+    private function getAdventurerParties(int $gameId): array
+    {
+        $connection = $this->dungeonRepo->getConnection();
+        $stmt = $connection->prepare(
+            'SELECT * FROM adventurer_parties WHERE player_id = ? AND retreating = 0 ORDER BY id'
+        );
+        $stmt->execute([$gameId]);
+
+        $parties = [];
+        while ($party = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $membersStmt = $connection->prepare(
+                'SELECT * FROM adventurers WHERE party_id = ? ORDER BY id'
+            );
+            $membersStmt->execute([(int) $party['id']]);
+            $members = [];
+
+            while ($member = $membersStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $className = (string) $member['class_name'];
+                $members[] = [
+                    'id' => (int) $member['id'],
+                    'classIdx' => $this->classIndex($className),
+                    'name' => (string) $member['name'],
+                    'level' => (int) $member['level'],
+                    'hp' => (int) $member['hp'],
+                    'maxHp' => (int) $member['max_hp'],
+                    'alive' => (bool) $member['alive'],
+                    'experience' => 0,
+                    'gold' => 0,
+                    'equipment' => [
+                        'weapon' => 'Basic Sword',
+                        'armor' => 'Leather Armor',
+                        'accessory' => 'None'
+                    ],
+                    'conditions' => [],
+                    'scaledStats' => [
+                        'hp' => (int) $member['max_hp'],
+                        'attack' => 10 + ((int) $member['level'] * 2),
+                        'defense' => 5 + (int) $member['level']
+                    ]
+                ];
+            }
+
+            $parties[] = [
+                'id' => (int) $party['id'],
+                'members' => $members,
+                'currentFloor' => (int) $party['current_floor'],
+                'currentRoom' => (int) $party['current_room'],
+                'retreating' => (bool) $party['retreating'],
+                'casualties' => (int) $party['casualties'],
+                'loot' => (int) $party['loot'],
+                'entryTime' => (int) $party['entry_time'],
+                'targetFloor' => (int) $party['target_floor'],
+                'boredom' => (int) ($party['boredom'] ?? 0),
+                'roomTicks' => (int) ($party['room_ticks'] ?? 0)
+            ];
+        }
+
+        return $parties;
+    }
+
+    private function classIndex(string $className): int
+    {
+        return match ($className) {
+            'Warrior' => 0,
+            'Rogue' => 1,
+            'Mage' => 2,
+            'Cleric' => 3,
+            default => 0
+        };
     }
 }

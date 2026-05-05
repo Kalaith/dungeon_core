@@ -12,6 +12,7 @@ use DungeonCore\Application\UseCases\UnlockMonsterSpeciesUseCase;
 use DungeonCore\Application\UseCases\GainMonsterExperienceUseCase;
 use DungeonCore\Application\UseCases\GetAvailableMonstersUseCase;
 use DungeonCore\Application\UseCases\UpdateDungeonStatusUseCase;
+use DungeonCore\Application\UseCases\AdvanceGameplayUseCase;
 use DungeonCore\Http\Response;
 use DungeonCore\Http\Request;
 
@@ -25,7 +26,8 @@ class GameController
         private UnlockMonsterSpeciesUseCase $unlockMonsterSpeciesUseCase,
         private GainMonsterExperienceUseCase $gainMonsterExperienceUseCase,
         private GetAvailableMonstersUseCase $getAvailableMonstersUseCase,
-        private UpdateDungeonStatusUseCase $updateDungeonStatusUseCase
+        private UpdateDungeonStatusUseCase $updateDungeonStatusUseCase,
+        private AdvanceGameplayUseCase $advanceGameplayUseCase
     ) {
     }
 
@@ -110,6 +112,15 @@ class GameController
             $sessionId,
             $data['status'] ?? ''
         );
+
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function advanceGameplay(Request $request, Response $response): Response
+    {
+        $sessionId = $this->getSessionId($request);
+        $result = $this->advanceGameplayUseCase->execute($sessionId);
 
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');

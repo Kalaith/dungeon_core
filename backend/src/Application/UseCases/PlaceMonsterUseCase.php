@@ -41,7 +41,7 @@ class PlaceMonsterUseCase
         }
 
         // Get room info and validate
-        $room = $this->dungeonRepo->getRoom($floorNumber, $roomPosition);
+        $room = $this->dungeonRepo->getRoom($game->getId(), $floorNumber, $roomPosition);
         if (!$room) {
             return ['success' => false, 'error' => 'Room not found!'];
         }
@@ -51,7 +51,7 @@ class PlaceMonsterUseCase
         }
 
         // Validate room capacity using backend logic
-        $existingMonsters = $this->dungeonRepo->getRoomMonsters($floorNumber, $roomPosition);
+        $existingMonsters = $this->dungeonRepo->getRoomMonsters($game->getId(), $floorNumber, $roomPosition);
         $validation = $this->gameLogic->validateMonsterPlacement(
             $floorNumber,
             $roomPosition,

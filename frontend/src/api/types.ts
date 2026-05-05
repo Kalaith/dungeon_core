@@ -15,6 +15,8 @@ export interface GameStateResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
+    coreIntegrity: number;
+    coreDestroyed: boolean;
     speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
   };
   floors?: Array<{
@@ -81,6 +83,40 @@ export interface DungeonStateResponse {
     roomId: number;
     alive: boolean;
     isBoss: boolean;
+  }>;
+  adventurerParties: Array<{
+    id: number;
+    members: Array<{
+      id: number;
+      classIdx: number;
+      name: string;
+      level: number;
+      hp: number;
+      maxHp: number;
+      alive: boolean;
+      experience: number;
+      gold: number;
+      equipment: {
+        weapon: string;
+        armor: string;
+        accessory: string;
+      };
+      conditions: string[];
+      scaledStats: {
+        hp: number;
+        attack: number;
+        defense: number;
+      };
+    }>;
+    currentFloor: number;
+    currentRoom: number;
+    retreating: boolean;
+    casualties: number;
+    loot: number;
+    entryTime: number;
+    targetFloor: number;
+    boredom: number;
+    roomTicks: number;
   }>;
 }
 
@@ -201,6 +237,19 @@ export interface UpdateDungeonStatusResponse {
   canModifyDungeon?: boolean;
 }
 
+export interface AdvanceGameplayResponse {
+  success: boolean;
+  error?: string;
+  tickApplied?: boolean;
+  events?: Array<{
+    type: 'system' | 'combat' | 'adventure' | 'building';
+    message: string;
+  }>;
+  activeAdventurerParties?: number;
+  coreIntegrity?: number;
+  coreDestroyed?: boolean;
+}
+
 export interface InitializeGameResponse {
   game: {
     id: number;
@@ -226,6 +275,8 @@ export interface InitializeGameResponse {
     monsterExperience: Record<string, number>;
     activeAdventurerParties: number;
     canModifyDungeon: boolean;
+    coreIntegrity: number;
+    coreDestroyed: boolean;
     speciesProgress: Record<string, { experience: number; unlockedTier: number }>;
     log: Array<{
       message: string;

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { fetchGameConstantsData } from '../../api/gameApi';
 import type { AdventurerParty, Adventurer } from '../../types/game';
+import { requirePositiveInterval } from '../../utils/gameConstants';
 
 interface AdventurerSystemProps {
   running: boolean;
@@ -349,6 +350,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
           console.error('Failed to load game constants');
           return;
         }
+        const intervalMs = requirePositiveInterval(gameConstants, 'TIME_ADVANCE_INTERVAL');
         systemIntervalRef.current = setInterval(async () => {
           try {
             await spawnAdventurerParty();
@@ -356,7 +358,7 @@ export const AdventurerSystem: React.FC<AdventurerSystemProps> = ({ running }) =
           } catch (error) {
             console.error('Error in adventurer system:', error);
           }
-        }, gameConstants.TIME_ADVANCE_INTERVAL);
+        }, intervalMs);
       } catch (error) {
         console.error('Error setting up adventurer system:', error);
       }

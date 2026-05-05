@@ -81,8 +81,14 @@ final class Router
 
                 $middlewares = array_merge($this->globalMiddleware, $route['middleware']);
                 foreach ($middlewares as $mw) {
-                    $mwInstance = is_string($mw) ? new $mw() : $mw;
-                    $result = $mwInstance($request, $response, $routeParams);
+                    try {
+                        $mwInstance = is_string($mw) ? new $mw() : $mw;
+                        $result = $mwInstance($request, $response, $routeParams);
+                    } catch (Throwable $e) {
+                        $this->emit($this->withCors($this->serverError($response, $e)));
+                        return;
+                    }
+
                     if ($result instanceof Response) {
                         $this->emit($this->withCors($result));
                         return;
@@ -100,22 +106,7 @@ final class Router
                 try {
                     $response = $this->invokeHandler($route['handler'], $request, $response, $routeParams);
                 } catch (Throwable $e) {
-                    $appEnv = strtolower((string) (Environment::optional('APP_ENV') ?? ''));
-                    $debug = Environment::optional('APP_DEBUG') === 'true'
-                        || Environment::optional('DEBUG') === 'true'
-                        || $appEnv === 'preview';
-                    $payload = [
-                        'success' => false,
-                        'error' => 'Internal server error'
-                    ];
-                    if ($debug) {
-                        $payload['exception'] = get_class($e);
-                        $payload['message'] = $e->getMessage();
-                        $payload['file'] = $e->getFile();
-                        $payload['line'] = $e->getLine();
-                        $payload['trace'] = $e->getTraceAsString();
-                    }
-                    $response = $this->writeJson($response->withStatus(500), $payload);
+                    $response = $this->serverError($response, $e);
                 }
 
                 $this->emit($this->withCors($response));
@@ -201,6 +192,29 @@ final class Router
     {
         $response->getBody()->write(json_encode($payload));
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    private function serverError(Response $response, Throwable $e): Response
+    {
+        $isConfigError = str_contains($e->getMessage(), 'Required environment variable');
+        $status = $isConfigError ? 503 : 500;
+        $appEnv = strtolower((string) (Environment::optional('APP_ENV') ?? ''));
+        $debug = Environment::optional('APP_DEBUG') === 'true'
+            || Environment::optional('DEBUG') === 'true'
+            || $appEnv === 'preview';
+        $payload = [
+            'success' => false,
+            'error' => $isConfigError ? 'Service temporarily unavailable' : 'Internal server error',
+        ];
+        if ($debug) {
+            $payload['exception'] = get_class($e);
+            $payload['message'] = $e->getMessage();
+            $payload['file'] = $e->getFile();
+            $payload['line'] = $e->getLine();
+            $payload['trace'] = $e->getTraceAsString();
+        }
+
+        return $this->writeJson($response->withStatus($status), $payload);
     }
 
     private function withCors(Response $response): Response

@@ -42,6 +42,7 @@ use DungeonCore\Application\UseCases\UnlockMonsterSpeciesUseCase;
 use DungeonCore\Application\UseCases\GainMonsterExperienceUseCase;
 use DungeonCore\Application\UseCases\GetAvailableMonstersUseCase;
 use DungeonCore\Application\UseCases\UpdateDungeonStatusUseCase;
+use DungeonCore\Application\UseCases\AdvanceGameplayUseCase;
 use DungeonCore\Application\UseCases\GetGameConstantsUseCase;
 use DungeonCore\Application\UseCases\GetMonsterTypesUseCase;
 use DungeonCore\Application\UseCases\GetMonsterTraitsUseCase;
@@ -80,6 +81,7 @@ $unlockMonsterSpeciesUseCase = new UnlockMonsterSpeciesUseCase($gameRepo, $gameL
 $gainMonsterExperienceUseCase = new GainMonsterExperienceUseCase($gameRepo, $gameLogic);
 $getAvailableMonstersUseCase = new GetAvailableMonstersUseCase($gameRepo, $gameLogic);
 $updateDungeonStatusUseCase = new UpdateDungeonStatusUseCase($gameRepo);
+$advanceGameplayUseCase = new AdvanceGameplayUseCase($gameRepo, $gameLogic, $pdo);
 $linkGuestAccountUseCase = new LinkGuestAccountUseCase($gameRepo);
 // Data Use Cases
 $getGameConstantsUseCase = new GetGameConstantsUseCase($dataRepo);
@@ -96,7 +98,8 @@ $gameController = new GameController(
     $unlockMonsterSpeciesUseCase,
     $gainMonsterExperienceUseCase,
     $getAvailableMonstersUseCase,
-    $updateDungeonStatusUseCase
+    $updateDungeonStatusUseCase,
+    $advanceGameplayUseCase
 );
 $dungeonController = new DungeonController($addRoomUseCase, $getDungeonStateUseCase);
 $dataController = new DataController(

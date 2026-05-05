@@ -1,13 +1,21 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useBackendGameStore } from '../stores/backendGameStore';
+import { useGameStore } from '../stores/gameStore';
 import { useSpeciesStore } from '../stores/speciesStore';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { ResourceBar } from '../components/layout/ResourceBar';
+import { GameShell } from '../components/layout/GameShell';
+import { TopHud } from '../components/layout/TopHud';
+import { CommandBar } from '../components/layout/CommandBar';
 import { SpeciesSelectionModal } from '../components/game/SpeciesSelectionModal';
-import { MonsterSelector } from '../components/game/MonsterSelector';
-import { DungeonView } from '../components/game/DungeonView';
-import { GameControls } from '../components/game/GameControls';
-import { RoomSelector } from '../components/game/RoomSelector';
+import { MonsterManagementPanel } from '../components/game/MonsterManagementPanel';
+import { DungeonBoard } from '../components/game/DungeonBoard';
+import { BuildPanel } from '../components/game/BuildPanel';
+import { IntelStrip } from '../components/game/IntelStrip';
+import { InspectorPanel } from '../components/game/InspectorPanel';
+import { useDungeonData } from '../hooks/useDungeonData';
+import { advanceGameplay, fetchGameConstantsData } from '../api/gameApi';
+import type { Room } from '../types/game';
+import { requirePositiveInterval } from '../utils/gameConstants';
 import {
   clearGuestSession,
   getFrontpageToken,
@@ -17,13 +25,17 @@ import {
 } from '../stores/authStore';
 
 export function GamePage() {
-  const { gameState, loading, error, initializeGame, refreshGameState } = useBackendGameStore();
+  const { gameState, loading, error, initializeGame, refreshGameState, selectedMonster, resetVersion } =
+    useBackendGameStore();
+  const addLog = useGameStore(state => state.addLog);
   const { unlockedSpecies } = useSpeciesStore();
   const { user, authMode, loginUrl, setLoginUrl, login, logout } = useAuthStore();
   const [showSpeciesModal, setShowSpeciesModal] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isStartingGuest, setIsStartingGuest] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+  const dungeonData = useDungeonData(3000, authReady && Boolean(user) && Boolean(gameState));
 
   const baseApiUrl = useMemo(() => {
     const configured = import.meta.env.VITE_API_URL as string | undefined;
@@ -184,6 +196,53 @@ export function GamePage() {
     }
   }, [refreshGameState, gameState]);
 
+  useEffect(() => {
+    if (!authReady || !user || !gameState || loading || gameState.coreDestroyed) {
+      return;
+    }
+
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const runTick = async () => {
+      try {
+        const result = await advanceGameplay();
+        if (cancelled || !result.success) {
+          return;
+        }
+
+        result.events?.forEach(event => {
+          addLog({ ...event, timestamp: Date.now() });
+        });
+        await refreshGameState();
+        window.dispatchEvent(new Event('dungeon-core:rooms-changed'));
+      } catch (tickError) {
+        console.error('Failed to advance gameplay:', tickError);
+      }
+    };
+
+    const setupTick = async () => {
+      const gameConstants = await fetchGameConstantsData();
+      if (cancelled) {
+        return;
+      }
+      const intervalMs = requirePositiveInterval(gameConstants, 'TIME_ADVANCE_INTERVAL');
+
+      interval = setInterval(() => {
+        void runTick();
+      }, intervalMs);
+    };
+
+    void setupTick();
+
+    return () => {
+      cancelled = true;
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [addLog, authReady, gameState?.coreDestroyed, loading, refreshGameState, resetVersion, user]);
+
   // Handle species selection from modal
   const handleSpeciesSelect = () => {
     setShowSpeciesModal(false);
@@ -256,7 +315,7 @@ export function GamePage() {
     return <LoadingSpinner />;
   }
 
-  if (error) {
+  if (error && !gameState) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
         <div className="bg-red-900 p-6 rounded-lg">
@@ -277,67 +336,63 @@ export function GamePage() {
     return <LoadingSpinner />;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div>
-            <div className="text-sm text-emerald-300 font-semibold">Dungeon Core</div>
-            <div className="text-xs text-gray-400">
-              {(user.display_name || user.username || user.email || user.id) ?? 'Unknown'}
-              {authMode === 'guest' ? ' (Guest)' : ''}
-            </div>
-          </div>
-          {user.is_guest && resolvedLoginUrl ? (
-            <a
-              href={resolvedLoginUrl}
-              className="px-4 py-2 rounded-lg bg-amber-500 text-gray-950 font-semibold hover:bg-amber-400"
-            >
-              Link Account
-            </a>
-          ) : null}
-        </div>
+  const playerName = (user.display_name || user.username || user.email || user.id) ?? 'Unknown';
+  const selectedRoom: Room | null =
+    dungeonData.floors
+      .flatMap(floor => floor.rooms)
+      .find(room => room.id === selectedRoomId) ?? null;
+  const hasInspectorContext = Boolean(selectedRoom || selectedMonster);
+  const buildAndMonsterPlacement = (
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className="h-[17rem] shrink-0">
+        <BuildPanel dungeonData={dungeonData} />
       </div>
-      <ResourceBar gameState={gameState} />
+      <div className="min-h-0 flex-1">
+        <MonsterManagementPanel />
+      </div>
+    </div>
+  );
 
+  return (
+    <>
       {showSpeciesModal && (
         <SpeciesSelectionModal open={showSpeciesModal} onClose={handleSpeciesSelect} />
       )}
 
-      <div className="container mx-auto px-4 py-6 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left sidebar - Room construction */}
-          <div className="lg:col-span-1">
-            <RoomSelector />
-          </div>
-
-          {/* Center - Dungeon view */}
-          <div className="lg:col-span-2">
-            {/* DungeonView now handles its own floor/room data and monster placement */}
-            <DungeonView />
-          </div>
-
-          {/* Right sidebar - Monster management */}
-          <div className="lg:col-span-1">
-            <MonsterSelector />
-
-            <div className="bg-gray-800 p-4 rounded-lg mt-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">Monsters</h3>
-              {/* Monsters will be shown by individual room components */}
-              <p className="text-gray-400 text-sm">
-                Monsters are displayed in their respective rooms
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating game controls at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 shadow-lg">
-        <div className="container mx-auto">
-          <GameControls />
-        </div>
-      </div>
-    </div>
+      <GameShell
+        hud={
+          <TopHud
+            gameState={gameState}
+            playerName={playerName}
+            isGuest={authMode === 'guest' || Boolean(user.is_guest)}
+            linkUrl={user.is_guest ? resolvedLoginUrl : undefined}
+          />
+        }
+        commandBar={<CommandBar />}
+        left={buildAndMonsterPlacement}
+        center={
+          <DungeonBoard
+            dungeonData={dungeonData}
+            selectedRoomId={selectedRoomId}
+            onSelectedRoomChange={setSelectedRoomId}
+          />
+        }
+        right={
+          hasInspectorContext ? (
+            <InspectorPanel dungeonData={dungeonData} selectedRoom={selectedRoom} />
+          ) : undefined
+        }
+        intel={<IntelStrip dungeonData={dungeonData} />}
+        mobileMonsters={<MonsterManagementPanel />}
+        mobileEvents={<IntelStrip dungeonData={dungeonData} variant="events" />}
+        mobileCore={
+          hasInspectorContext ? (
+            <InspectorPanel dungeonData={dungeonData} selectedRoom={selectedRoom} />
+          ) : (
+            <IntelStrip dungeonData={dungeonData} variant="core" />
+          )
+        }
+      />
+    </>
   );
 }

@@ -10,6 +10,8 @@ CREATE TABLE players (
     day INT DEFAULT 1,
     hour INT DEFAULT 6,
     status ENUM('Open', 'Closing', 'Closed') DEFAULT 'Open',
+    core_integrity INT DEFAULT 100,
+    last_advanced_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -64,6 +66,9 @@ CREATE TABLE adventurer_parties (
     retreating BOOLEAN DEFAULT FALSE,
     casualties INT DEFAULT 0,
     loot INT DEFAULT 0,
+    boredom INT DEFAULT 0,
+    room_ticks INT DEFAULT 0,
+    monsters_defeated INT DEFAULT 0,
     entry_time INT,
     target_floor INT,
     FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE

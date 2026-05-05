@@ -12,9 +12,25 @@ import type {
   AddRoomResponse,
   InitializeGameResponse,
   UpdateDungeonStatusResponse,
+  AdvanceGameplayResponse,
 } from './types';
 import type { ResetGameResponse } from './resetTypes';
 import { getActiveAuthToken, WEBHATCHERY_AUTH_STORAGE_KEY } from '../stores/authStore';
+
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly endpoint: string,
+    public readonly status?: number,
+    public readonly nonJson = false
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 class ApiClient {
   private baseUrl: string;
@@ -35,7 +51,8 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
 
     // Only log for non-routine requests to reduce console spam
-    const isRoutineRequest = endpoint === '/game/state';
+    const isRoutineRequest =
+      endpoint === '/game/state' || endpoint === '/dungeon/state' || endpoint === '/game/advance';
     if (!isRoutineRequest) {
       console.log('Making API request:', {
         url,
@@ -68,15 +85,19 @@ class ApiClient {
       if (response.status === 401) {
         await this.persistLoginUrl(response);
       }
+
+      const payload = await this.readJsonResponse(response, endpoint);
+      const message =
+        isRecord(payload) && typeof payload.error === 'string' ? payload.error : response.statusText;
       console.error('API Error:', response.status, response.statusText);
-      throw new Error(`API Error: ${response.status}`);
+      throw new ApiRequestError(`API Error ${response.status}: ${message}`, endpoint, response.status);
     }
 
-    const data = await response.json();
+    const data = await this.readJsonResponse(response, endpoint);
     if (!isRoutineRequest) {
       console.log('API response data:', data);
     }
-    return data;
+    return data as T;
   }
 
   async initializeGame(): Promise<InitializeGameResponse> {
@@ -115,6 +136,12 @@ class ApiClient {
     return this.request<UpdateDungeonStatusResponse>('/game/status', {
       method: 'POST',
       body: JSON.stringify({ status }),
+    });
+  }
+
+  async advanceGameplay(): Promise<AdvanceGameplayResponse> {
+    return this.request<AdvanceGameplayResponse>('/game/advance', {
+      method: 'POST',
     });
   }
 
@@ -163,7 +190,11 @@ class ApiClient {
 
   private async persistLoginUrl(response: Response): Promise<void> {
     try {
-      const payload = (await response.clone().json()) as { login_url?: unknown };
+      const payload = await this.readJsonResponse(response.clone(), 'auth');
+      if (!isRecord(payload)) {
+        return;
+      }
+
       if (typeof payload.login_url !== 'string' || payload.login_url.trim() === '') {
         return;
       }
@@ -186,6 +217,25 @@ class ApiClient {
       );
     } catch (error) {
       console.warn('Failed to persist login URL from 401 response', error);
+    }
+  }
+
+  private async readJsonResponse(response: Response, endpoint: string): Promise<unknown> {
+    const text = await response.text();
+    if (text.trim() === '') {
+      return {};
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      const preview = text.trim().replace(/\s+/g, ' ').slice(0, 80);
+      throw new ApiRequestError(
+        `API returned non-JSON response for ${endpoint}${preview ? `: ${preview}` : ''}`,
+        endpoint,
+        response.status,
+        true
+      );
     }
   }
 }

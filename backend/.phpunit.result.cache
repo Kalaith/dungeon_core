@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"LinkGuestAccountUseCaseTest::testMovesGuestSaveToAuthenticatedUser":0.004,"LinkGuestAccountUseCaseTest::testRejectsGuestToGuestLinking":0,"LinkGuestAccountUseCaseTest::testReportsMissingGuestSave":0}}

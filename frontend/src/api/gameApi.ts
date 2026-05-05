@@ -78,6 +78,10 @@ export const updateDungeonStatus = async (status: string) => {
   return apiClient.updateDungeonStatus(status);
 };
 
+export const advanceGameplay = async () => {
+  return apiClient.advanceGameplay();
+};
+
 // Game constants from backend (cached)
 export const fetchGameConstantsData = async () => {
   if (gameConstantsCache === null) {

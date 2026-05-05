@@ -33,6 +33,12 @@ class UpdateDungeonStatusUseCase
         }
 
         $targetStatus = $this->allowedStatuses[$normalized];
+        if (($targetStatus === 'Closed' || $targetStatus === 'Closing') && $game->hasActiveAdventurers()) {
+            $targetStatus = 'Closing';
+        } elseif ($targetStatus === 'Closing') {
+            $targetStatus = 'Closed';
+        }
+
         $game->setStatus($targetStatus);
 
         $this->gameRepo->save($game);

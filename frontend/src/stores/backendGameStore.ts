@@ -7,6 +7,7 @@ import {
   resetGameAPI,
   updateDungeonStatus,
 } from '../api/gameApi';
+import { ApiRequestError } from '../api/client';
 import { useSpeciesStore } from './speciesStore';
 
 // Export the GameState type for use in components
@@ -21,6 +22,8 @@ export interface GameState {
   status: string;
   canModifyDungeon: boolean;
   activeAdventurerParties: number;
+  coreIntegrity: number;
+  coreDestroyed: boolean;
 }
 
 interface BackendGameState {
@@ -32,6 +35,7 @@ interface BackendGameState {
 
   // UI state
   selectedMonster: string | null;
+  resetVersion: number;
 
   // Actions
   initializeGame: () => Promise<void>;
@@ -43,7 +47,12 @@ interface BackendGameState {
     roomPosition: number,
     monsterType: string
   ) => Promise<boolean>;
-  addRoom: (floorNumber: number, roomType: string, position: number) => Promise<boolean>;
+  addRoom: (
+    floorNumber: number,
+    roomType: string,
+    position: number,
+    costOverride?: number
+  ) => Promise<boolean>;
   updateStatus: (status: string) => Promise<boolean>;
 }
 
@@ -52,12 +61,13 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
   loading: false,
   error: null,
   selectedMonster: null,
+  resetVersion: 0,
 
   initializeGame: async () => {
     set({ loading: true, error: null });
     try {
       console.log('Starting game initialization...');
-      const initialData = await initializeGame();
+      const initialData = await withTransientRetry(() => initializeGame());
       console.log('Initialize game response received:', initialData);
 
       // Only store the minimal game state
@@ -73,6 +83,8 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           status: initialData.game.status,
           canModifyDungeon: initialData.game.canModifyDungeon,
           activeAdventurerParties: initialData.game.activeAdventurerParties,
+          coreIntegrity: initialData.game.coreIntegrity,
+          coreDestroyed: initialData.game.coreDestroyed,
         },
         loading: false,
       });
@@ -91,6 +103,11 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
       console.log('Game state initialized successfully');
     } catch (error) {
       console.error('Error during game initialization:', error);
+      if (get().gameState && isTransientApiError(error)) {
+        set({ loading: false, error: null });
+        return;
+      }
+
       set({
         error: error instanceof Error ? error.message : 'Failed to initialize game',
         loading: false,
@@ -102,7 +119,7 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
     set({ error: null });
     try {
       // Get current game state from backend (only minimal data)
-      const newGameData = await getGameState();
+      const newGameData = await withTransientRetry(() => getGameState());
       const currentState = get();
 
       // Only update if the core game state actually changed
@@ -118,7 +135,9 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
         currentGame.hour !== newGame.hour ||
         currentGame.status !== newGame.status ||
         currentGame.canModifyDungeon !== newGame.canModifyDungeon ||
-        currentGame.activeAdventurerParties !== newGame.activeAdventurerParties;
+        currentGame.activeAdventurerParties !== newGame.activeAdventurerParties ||
+        currentGame.coreIntegrity !== newGame.coreIntegrity ||
+        currentGame.coreDestroyed !== newGame.coreDestroyed;
 
       if (needsUpdate) {
         console.log('Game state changed, updating...');
@@ -134,6 +153,8 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
             status: newGame.status,
             canModifyDungeon: newGame.canModifyDungeon,
             activeAdventurerParties: newGame.activeAdventurerParties,
+            coreIntegrity: newGame.coreIntegrity,
+            coreDestroyed: newGame.coreDestroyed,
           },
         });
       } else {
@@ -150,6 +171,12 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
           );
       }
     } catch (error) {
+      if (get().gameState && isTransientApiError(error)) {
+        console.warn('Ignoring transient game state refresh failure:', error);
+        set({ error: null });
+        return;
+      }
+
       set({
         error: error instanceof Error ? error.message : 'Failed to refresh game state',
       });
@@ -180,8 +207,13 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
     }
   },
 
-  addRoom: async (floorNumber: number, roomType: string, position: number) => {
-    const cost = 20 + position * 5; // Basic cost calculation
+  addRoom: async (
+    floorNumber: number,
+    roomType: string,
+    position: number,
+    costOverride?: number
+  ) => {
+    const cost = costOverride ?? 20 + position * 5;
 
     try {
       const result = await addRoomAPI(floorNumber, roomType, position, cost);
@@ -242,10 +274,13 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
             status: result.gameData.game.status,
             canModifyDungeon: result.gameData.game.canModifyDungeon,
             activeAdventurerParties: result.gameData.game.activeAdventurerParties,
+            coreIntegrity: result.gameData.game.coreIntegrity,
+            coreDestroyed: result.gameData.game.coreDestroyed,
           },
           loading: false,
           error: null,
           selectedMonster: null,
+          resetVersion: get().resetVersion + 1,
         });
 
         useSpeciesStore
@@ -268,3 +303,38 @@ export const useBackendGameStore = create<BackendGameState>()((set, get) => ({
     }
   },
 }));
+
+const transientRetryDelaysMs = [300, 900, 1800];
+
+async function withTransientRetry<T>(action: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= transientRetryDelaysMs.length; attempt += 1) {
+    try {
+      return await action();
+    } catch (error) {
+      lastError = error;
+      if (!isTransientApiError(error) || attempt === transientRetryDelaysMs.length) {
+        break;
+      }
+
+      await wait(transientRetryDelaysMs[attempt]);
+    }
+  }
+
+  throw lastError;
+}
+
+function isTransientApiError(error: unknown): boolean {
+  if (error instanceof ApiRequestError) {
+    return error.nonJson || error.status === undefined || error.status === 408 || error.status === 429 || error.status >= 500;
+  }
+
+  return error instanceof TypeError;
+}
+
+function wait(delayMs: number): Promise<void> {
+  return new Promise(resolve => {
+    window.setTimeout(resolve, delayMs);
+  });
+}
